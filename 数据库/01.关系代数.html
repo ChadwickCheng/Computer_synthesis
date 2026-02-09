@@ -1,0 +1,528 @@
+<!-- 
+关系代数运算符学习笔记
+1. 概念：用对关系的运算表达查询
+2. 选择：σ，选择满足条件的行
+3. 投影：π，选择满足条件的列，自动去重
+4. 笛卡尔积：×，连接两个关系的每一行
+5. 连接：⨝，根据条件筛选笛卡尔积
+6. 自然连接：先等值连接，再去除重复列
+7. 左外连接：先自然连接，保留左表所有行，右表无匹配用null
+8. 右外连接：保留右表所有行
+9. 外连接：左右都保留
+10. 除号：N1÷N2，哪些N1的A同时有N2的B，遇到所有全部至少就用除号
+11. 列可以用列名和数字标识 
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关系代数运算示例</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #4CAF50;
+            margin-top: 30px;
+            border-left: 5px solid #4CAF50;
+            padding-left: 10px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .formula {
+            background: #e8f5e9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .explanation {
+            color: #666;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e8f5e9;
+        }
+        .result-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-top: 15px;
+            font-size: 18px;
+        }
+        .table-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .table-wrapper {
+            flex: 1;
+            min-width: 300px;
+        }
+        .table-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background: #e3f2fd;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .highlight {
+            background-color: #ffeb3b !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 关系代数运算符详解与示例</h1>
+
+    <!-- 基础表数据 -->
+    <div class="section">
+        <h2>🗂️ 基础数据表</h2>
+        <div class="table-container">
+            <div class="table-wrapper">
+                <div class="table-name">学生表 (Student)</div>
+                <table id="studentTable"></table>
+            </div>
+            <div class="table-wrapper">
+                <div class="table-name">课程表 (Course)</div>
+                <table id="courseTable"></table>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <div class="table-name">选课表 (SC - Student Course)</div>
+            <table id="scTable"></table>
+        </div>
+    </div>
+
+    <!-- 1. 选择运算 -->
+    <div class="section">
+        <h2>1️⃣ 选择 (Selection) - σ</h2>
+        <div class="formula">σ<sub>Age≥20</sub>(Student)</div>
+        <div class="explanation">💡 选择年龄≥20的学生（选择满足条件的<strong>行</strong>）</div>
+        <button onclick="showSelection()">执行选择运算</button>
+        <div id="selectionResult"></div>
+    </div>
+
+    <!-- 2. 投影运算 -->
+    <div class="section">
+        <h2>2️⃣ 投影 (Projection) - π</h2>
+        <div class="formula">π<sub>Sname, Age</sub>(Student)</div>
+        <div class="explanation">💡 投影出学生的姓名和年龄（选择满足条件的<strong>列</strong>，自动去重）</div>
+        <button onclick="showProjection()">执行投影运算</button>
+        <div id="projectionResult"></div>
+    </div>
+
+    <!-- 3. 笛卡尔积 -->
+    <div class="section">
+        <h2>3️⃣ 笛卡尔积 (Cartesian Product) - ×</h2>
+        <div class="formula">Student × Course</div>
+        <div class="explanation">💡 连接两个关系的每一行（m行×n行 = m×n行）- 结果较大，仅显示部分</div>
+        <button onclick="showCartesian()">执行笛卡尔积</button>
+        <div id="cartesianResult"></div>
+    </div>
+
+    <!-- 4. 连接运算 -->
+    <div class="section">
+        <h2>4️⃣ 连接 (Join) - ⨝</h2>
+        <div class="formula">Student ⨝<sub>Student.Sno=SC.Sno</sub> SC</div>
+        <div class="explanation">💡 根据条件筛选笛卡尔积（只保留学号相等的行）</div>
+        <button onclick="showJoin()">执行连接运算</button>
+        <div id="joinResult"></div>
+    </div>
+
+    <!-- 5. 自然连接 -->
+    <div class="section">
+        <h2>5️⃣ 自然连接 (Natural Join) - ⨝</h2>
+        <div class="formula">Student ⨝ SC</div>
+        <div class="explanation">💡 先等值连接（相同列名自动匹配），再去除重复列</div>
+        <button onclick="showNaturalJoin()">执行自然连接</button>
+        <div id="naturalJoinResult"></div>
+    </div>
+
+    <!-- 6. 左外连接 -->
+    <div class="section">
+        <h2>6️⃣ 左外连接 (Left Outer Join) - ⟕</h2>
+        <div class="formula">Student ⟕ SC</div>
+        <div class="explanation">💡 先自然连接，保留左表(Student)所有行，右表无匹配用NULL填充</div>
+        <button onclick="showLeftJoin()">执行左外连接</button>
+        <div id="leftJoinResult"></div>
+    </div>
+
+    <!-- 7. 右外连接 -->
+    <div class="section">
+        <h2>7️⃣ 右外连接 (Right Outer Join) - ⟖</h2>
+        <div class="formula">Student ⟖ SC</div>
+        <div class="explanation">💡 先自然连接，保留右表(SC)所有行，左表无匹配用NULL填充</div>
+        <button onclick="showRightJoin()">执行右外连接</button>
+        <div id="rightJoinResult"></div>
+    </div>
+
+    <!-- 8. 全外连接 -->
+    <div class="section">
+        <h2>8️⃣ 全外连接 (Full Outer Join) - ⟗</h2>
+        <div class="formula">Student ⟗ SC</div>
+        <div class="explanation">💡 左右表都保留，无匹配的用NULL填充</div>
+        <button onclick="showFullJoin()">执行全外连接</button>
+        <div id="fullJoinResult"></div>
+    </div>
+
+    <!-- 9. 除法运算 -->
+    <div class="section">
+        <h2>9️⃣ 除法 (Division) - ÷</h2>
+        <div class="formula">SC ÷ Course</div>
+        <div class="explanation">💡 查询选修了<strong>所有</strong>课程的学生（遇到"所有"、"全部"、"至少"就用除号）</div>
+        <div class="explanation">📖 SC ÷ Course = 哪些学生(Sno)的课程号(Cno)包含了Course表中的所有课程</div>
+        <button onclick="showDivision()">执行除法运算</button>
+        <div id="divisionResult"></div>
+    </div>
+
+    <script>
+        // 基础数据
+        const students = [
+            {Sno: 'S01', Sname: '张三', Age: 19, Sex: '男'},
+            {Sno: 'S02', Sname: '李四', Age: 20, Sex: '女'},
+            {Sno: 'S03', Sname: '王五', Age: 22, Sex: '男'},
+            {Sno: 'S04', Sname: '赵六', Age: 21, Sex: '女'},
+            {Sno: 'S05', Sname: '孙七', Age: 19, Sex: '男'}
+        ];
+
+        const courses = [
+            {Cno: 'C01', Cname: '数据库', Credit: 4},
+            {Cno: 'C02', Cname: '数据结构', Credit: 3},
+            {Cno: 'C03', Cname: '操作系统', Credit: 4}
+        ];
+
+        const sc = [
+            {Sno: 'S01', Cno: 'C01', Grade: 85},
+            {Sno: 'S01', Cno: 'C02', Grade: 90},
+            {Sno: 'S02', Cno: 'C01', Grade: 88},
+            {Sno: 'S02', Cno: 'C02', Grade: 92},
+            {Sno: 'S02', Cno: 'C03', Grade: 87},
+            {Sno: 'S03', Cno: 'C01', Grade: 78},
+            {Sno: 'S04', Cno: 'C02', Grade: 95}
+        ];
+
+        // 渲染表格
+        function renderTable(data, elementId) {
+            if (data.length === 0) {
+                document.getElementById(elementId).innerHTML = '<p>结果为空</p>';
+                return;
+            }
+            
+            const keys = Object.keys(data[0]);
+            let html = '<tr>';
+            keys.forEach(key => {
+                html += `<th>${key}</th>`;
+            });
+            html += '</tr>';
+            
+            data.forEach(row => {
+                html += '<tr>';
+                keys.forEach(key => {
+                    html += `<td>${row[key] === null ? 'NULL' : row[key]}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            document.getElementById(elementId).innerHTML = html;
+        }
+
+        // 渲染带标题的结果
+        function renderResult(containerId, data, title = '结果') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="result-title">📊 ${title}（共 ${data.length} 行）</div>
+                <table id="${containerId}_table"></table>
+            `;
+            renderTable(data, `${containerId}_table`);
+        }
+
+        // 初始化显示基础表
+        renderTable(students, 'studentTable');
+        renderTable(courses, 'courseTable');
+        renderTable(sc, 'scTable');
+
+        // 1. 选择运算
+        function showSelection() {
+            const result = students.filter(s => s.Age >= 20);
+            renderResult('selectionResult', result, '选择 Age≥20 的学生');
+        }
+
+        // 2. 投影运算
+        function showProjection() {
+            const result = students.map(s => ({
+                Sname: s.Sname,
+                Age: s.Age
+            }));
+            // 去重
+            const unique = Array.from(new Map(result.map(item => 
+                [JSON.stringify(item), item])).values());
+            renderResult('projectionResult', unique, '投影 Sname, Age');
+        }
+
+        // 3. 笛卡尔积
+        function showCartesian() {
+            const result = [];
+            students.forEach(s => {
+                courses.forEach(c => {
+                    result.push({...s, ...c});
+                });
+            });
+            // 只显示前10行
+            renderResult('cartesianResult', result.slice(0, 10), 
+                `笛卡尔积（总共 ${result.length} 行，仅显示前10行）`);
+        }
+
+        // 4. 连接运算
+        function showJoin() {
+            const result = [];
+            students.forEach(s => {
+                sc.forEach(sc_row => {
+                    if (s.Sno === sc_row.Sno) {
+                        result.push({
+                            Sno: s.Sno,
+                            Sname: s.Sname,
+                            Age: s.Age,
+                            Sex: s.Sex,
+                            Cno: sc_row.Cno,
+                            Grade: sc_row.Grade
+                        });
+                    }
+                });
+            });
+            renderResult('joinResult', result, '连接 Student.Sno = SC.Sno');
+        }
+
+        // 5. 自然连接
+        function showNaturalJoin() {
+            const result = [];
+            students.forEach(s => {
+                sc.forEach(sc_row => {
+                    if (s.Sno === sc_row.Sno) {
+                        result.push({
+                            Sno: s.Sno,  // 去重：只保留一个Sno
+                            Sname: s.Sname,
+                            Age: s.Age,
+                            Sex: s.Sex,
+                            Cno: sc_row.Cno,
+                            Grade: sc_row.Grade
+                        });
+                    }
+                });
+            });
+            renderResult('naturalJoinResult', result, '自然连接（自动匹配Sno并去重）');
+        }
+
+        // 6. 左外连接
+        function showLeftJoin() {
+            const result = [];
+            students.forEach(s => {
+                const matches = sc.filter(sc_row => sc_row.Sno === s.Sno);
+                if (matches.length > 0) {
+                    matches.forEach(sc_row => {
+                        result.push({
+                            Sno: s.Sno,
+                            Sname: s.Sname,
+                            Age: s.Age,
+                            Sex: s.Sex,
+                            Cno: sc_row.Cno,
+                            Grade: sc_row.Grade
+                        });
+                    });
+                } else {
+                    // 没有匹配，右表用NULL
+                    result.push({
+                        Sno: s.Sno,
+                        Sname: s.Sname,
+                        Age: s.Age,
+                        Sex: s.Sex,
+                        Cno: null,
+                        Grade: null
+                    });
+                }
+            });
+            renderResult('leftJoinResult', result, '左外连接（保留所有学生）');
+        }
+
+        // 7. 右外连接
+        function showRightJoin() {
+            const result = [];
+            const matchedSnos = new Set();
+            
+            sc.forEach(sc_row => {
+                const student = students.find(s => s.Sno === sc_row.Sno);
+                if (student) {
+                    matchedSnos.add(sc_row.Sno);
+                    result.push({
+                        Sno: student.Sno,
+                        Sname: student.Sname,
+                        Age: student.Age,
+                        Sex: student.Sex,
+                        Cno: sc_row.Cno,
+                        Grade: sc_row.Grade
+                    });
+                } else {
+                    result.push({
+                        Sno: sc_row.Sno,
+                        Sname: null,
+                        Age: null,
+                        Sex: null,
+                        Cno: sc_row.Cno,
+                        Grade: sc_row.Grade
+                    });
+                }
+            });
+            renderResult('rightJoinResult', result, '右外连接（保留所有选课记录）');
+        }
+
+        // 8. 全外连接
+        function showFullJoin() {
+            const result = [];
+            const matchedSnos = new Set();
+            
+            // 先处理匹配的
+            students.forEach(s => {
+                const matches = sc.filter(sc_row => sc_row.Sno === s.Sno);
+                if (matches.length > 0) {
+                    matchedSnos.add(s.Sno);
+                    matches.forEach(sc_row => {
+                        result.push({
+                            Sno: s.Sno,
+                            Sname: s.Sname,
+                            Age: s.Age,
+                            Sex: s.Sex,
+                            Cno: sc_row.Cno,
+                            Grade: sc_row.Grade
+                        });
+                    });
+                } else {
+                    // 左表没匹配的
+                    result.push({
+                        Sno: s.Sno,
+                        Sname: s.Sname,
+                        Age: s.Age,
+                        Sex: s.Sex,
+                        Cno: null,
+                        Grade: null
+                    });
+                }
+            });
+            
+            // 右表没匹配的（这个例子中不存在）
+            sc.forEach(sc_row => {
+                if (!matchedSnos.has(sc_row.Sno)) {
+                    result.push({
+                        Sno: sc_row.Sno,
+                        Sname: null,
+                        Age: null,
+                        Sex: null,
+                        Cno: sc_row.Cno,
+                        Grade: sc_row.Grade
+                    });
+                }
+            });
+            
+            renderResult('fullJoinResult', result, '全外连接（保留所有记录）');
+        }
+
+        // 9. 除法运算
+        function showDivision() {
+            // SC ÷ Course：找出选修了所有课程的学生
+            const allCourses = courses.map(c => c.Cno);
+            const studentCourses = {};
+            
+            // 统计每个学生选了哪些课
+            sc.forEach(sc_row => {
+                if (!studentCourses[sc_row.Sno]) {
+                    studentCourses[sc_row.Sno] = [];
+                }
+                studentCourses[sc_row.Sno].push(sc_row.Cno);
+            });
+            
+            // 找出选了所有课程的学生
+            const result = [];
+            Object.keys(studentCourses).forEach(sno => {
+                const hasAllCourses = allCourses.every(cno => 
+                    studentCourses[sno].includes(cno)
+                );
+                if (hasAllCourses) {
+                    const student = students.find(s => s.Sno === sno);
+                    result.push({
+                        Sno: sno,
+                        Sname: student ? student.Sname : 'Unknown'
+                    });
+                }
+            });
+            
+            const container = document.getElementById('divisionResult');
+            container.innerHTML = `
+                <div class="result-title">📊 选修了所有课程的学生（共 ${result.length} 人）</div>
+                ${result.length > 0 ? 
+                    `<table id="divisionResult_table"></table>` : 
+                    '<p style="color: #f44336; padding: 15px; background: #ffebee;">没有学生选修了所有课程</p>'}
+            `;
+            if (result.length > 0) {
+                renderTable(result, 'divisionResult_table');
+            }
+        }
+    </script>
+</body>
+</html>
