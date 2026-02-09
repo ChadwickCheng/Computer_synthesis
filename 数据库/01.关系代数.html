@@ -19,18 +19,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>关系代数运算示例</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
             background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+        /* 左侧运算区域 */
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+        /* 右侧数据表区域 */
+        .right-panel {
+            width: 500px;
+            background: white;
+            border-left: 3px solid #4CAF50;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
         }
         h1 {
-            text-align: center;
             color: #333;
             border-bottom: 3px solid #4CAF50;
             padding-bottom: 10px;
+            margin-bottom: 20px;
         }
         h2 {
             color: #4CAF50;
@@ -75,10 +97,12 @@
             padding: 12px;
             text-align: left;
             font-weight: bold;
+            font-size: 14px;
         }
         td {
             padding: 10px;
             border: 1px solid #ddd;
+            font-size: 13px;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -92,15 +116,8 @@
             margin-top: 15px;
             font-size: 18px;
         }
-        .table-container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
         .table-wrapper {
-            flex: 1;
-            min-width: 300px;
+            margin-bottom: 20px;
         }
         .table-name {
             font-weight: bold;
@@ -110,6 +127,9 @@
             background: #e3f2fd;
             padding: 8px;
             border-radius: 4px;
+        }
+        .right-panel .table-name {
+            background: #c8e6c9;
         }
         button {
             background: #4CAF50;
@@ -128,110 +148,125 @@
             background-color: #ffeb3b !important;
             font-weight: bold;
         }
+        .sticky-title {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding: 10px 0;
+            border-bottom: 2px solid #4CAF50;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>📚 关系代数运算符详解与示例</h1>
+    <!-- 左侧：运算和答案 -->
+    <div class="left-panel">
+        <h1>📚 关系代数运算符详解与示例</h1>
 
-    <!-- 基础表数据 -->
-    <div class="section">
-        <h2>🗂️ 基础数据表</h2>
-        <div class="table-container">
-            <div class="table-wrapper">
-                <div class="table-name">学生表 (Student)</div>
-                <table id="studentTable"></table>
-            </div>
-            <div class="table-wrapper">
-                <div class="table-name">课程表 (Course)</div>
-                <table id="courseTable"></table>
-            </div>
+        <!-- 1. 选择运算 -->
+        <div class="section">
+            <h2>1️⃣ 选择 (Selection) - σ</h2>
+            <div class="formula">σ<sub>Age≥20</sub>(Student)</div>
+            <div class="explanation">💡 选择年龄≥20的学生（选择满足条件的<strong>行</strong>）</div>
+            <button onclick="showSelection()">执行选择运算</button>
+            <div id="selectionResult"></div>
         </div>
+
+        <!-- 2. 投影运算 -->
+        <div class="section">
+            <h2>2️⃣ 投影 (Projection) - π</h2>
+            <div class="formula">π<sub>Sname, Age</sub>(Student)</div>
+            <div class="explanation">💡 投影出学生的姓名和年龄（选择满足条件的<strong>列</strong>，自动去重）</div>
+            <button onclick="showProjection()">执行投影运算</button>
+            <div id="projectionResult"></div>
+        </div>
+
+        <!-- 3. 笛卡尔积 -->
+        <div class="section">
+            <h2>3️⃣ 笛卡尔积 (Cartesian Product) - ×</h2>
+            <div class="formula">Student × Course</div>
+            <div class="explanation">💡 连接两个关系的每一行（m行×n行 = m×n行）- 结果较大，仅显示部分</div>
+            <button onclick="showCartesian()">执行笛卡尔积</button>
+            <div id="cartesianResult"></div>
+        </div>
+
+        <!-- 4. 连接运算 -->
+        <div class="section">
+            <h2>4️⃣ 连接 (Join) - ⨝</h2>
+            <div class="formula">Student ⨝<sub>Student.Sno=SC.Sno</sub> SC</div>
+            <div class="explanation">💡 根据条件筛选笛卡尔积（只保留学号相等的行）</div>
+            <button onclick="showJoin()">执行连接运算</button>
+            <div id="joinResult"></div>
+        </div>
+
+        <!-- 5. 自然连接 -->
+        <div class="section">
+            <h2>5️⃣ 自然连接 (Natural Join) - ⨝</h2>
+            <div class="formula">Student ⨝ SC</div>
+            <div class="explanation">💡 先等值连接（相同列名自动匹配），再去除重复列</div>
+            <button onclick="showNaturalJoin()">执行自然连接</button>
+            <div id="naturalJoinResult"></div>
+        </div>
+
+        <!-- 6. 左外连接 -->
+        <div class="section">
+            <h2>6️⃣ 左外连接 (Left Outer Join) - ⟕</h2>
+            <div class="formula">Student ⟕ SC</div>
+            <div class="explanation">💡 先自然连接，保留左表(Student)所有行，右表无匹配用NULL填充</div>
+            <button onclick="showLeftJoin()">执行左外连接</button>
+            <div id="leftJoinResult"></div>
+        </div>
+
+        <!-- 7. 右外连接 -->
+        <div class="section">
+            <h2>7️⃣ 右外连接 (Right Outer Join) - ⟖</h2>
+            <div class="formula">Student ⟖ SC</div>
+            <div class="explanation">💡 先自然连接，保留右表(SC)所有行，左表无匹配用NULL填充</div>
+            <button onclick="showRightJoin()">执行右外连接</button>
+            <div id="rightJoinResult"></div>
+        </div>
+
+        <!-- 8. 全外连接 -->
+        <div class="section">
+            <h2>8️⃣ 全外连接 (Full Outer Join) - ⟗</h2>
+            <div class="formula">Student ⟗ SC</div>
+            <div class="explanation">💡 左右表都保留，无匹配的用NULL填充</div>
+            <button onclick="showFullJoin()">执行全外连接</button>
+            <div id="fullJoinResult"></div>
+        </div>
+
+        <!-- 9. 除法运算 -->
+        <div class="section">
+            <h2>9️⃣ 除法 (Division) - ÷</h2>
+            <div class="formula">SC ÷ Course</div>
+            <div class="explanation">💡 查询选修了<strong>所有</strong>课程的学生（遇到"所有"、"全部"、"至少"就用除号）</div>
+            <div class="explanation">📖 SC ÷ Course = 哪些学生(Sno)的课程号(Cno)包含了Course表中的所有课程</div>
+            <button onclick="showDivision()">执行除法运算</button>
+            <div id="divisionResult"></div>
+        </div>
+    </div>
+
+    <!-- 右侧：基础数据表（固定） -->
+    <div class="right-panel">
+        <div class="sticky-title">
+            <h2 style="margin: 0;">🗂️ 基础数据表</h2>
+        </div>
+        
         <div class="table-wrapper">
-            <div class="table-name">选课表 (SC - Student Course)</div>
+            <div class="table-name">📋 学生表 (Student)</div>
+            <table id="studentTable"></table>
+        </div>
+        
+        <div class="table-wrapper">
+            <div class="table-name">📋 课程表 (Course)</div>
+            <table id="courseTable"></table>
+        </div>
+        
+        <div class="table-wrapper">
+            <div class="table-name">📋 选课表 (SC)</div>
             <table id="scTable"></table>
         </div>
-    </div>
-
-    <!-- 1. 选择运算 -->
-    <div class="section">
-        <h2>1️⃣ 选择 (Selection) - σ</h2>
-        <div class="formula">σ<sub>Age≥20</sub>(Student)</div>
-        <div class="explanation">💡 选择年龄≥20的学生（选择满足条件的<strong>行</strong>）</div>
-        <button onclick="showSelection()">执行选择运算</button>
-        <div id="selectionResult"></div>
-    </div>
-
-    <!-- 2. 投影运算 -->
-    <div class="section">
-        <h2>2️⃣ 投影 (Projection) - π</h2>
-        <div class="formula">π<sub>Sname, Age</sub>(Student)</div>
-        <div class="explanation">💡 投影出学生的姓名和年龄（选择满足条件的<strong>列</strong>，自动去重）</div>
-        <button onclick="showProjection()">执行投影运算</button>
-        <div id="projectionResult"></div>
-    </div>
-
-    <!-- 3. 笛卡尔积 -->
-    <div class="section">
-        <h2>3️⃣ 笛卡尔积 (Cartesian Product) - ×</h2>
-        <div class="formula">Student × Course</div>
-        <div class="explanation">💡 连接两个关系的每一行（m行×n行 = m×n行）- 结果较大，仅显示部分</div>
-        <button onclick="showCartesian()">执行笛卡尔积</button>
-        <div id="cartesianResult"></div>
-    </div>
-
-    <!-- 4. 连接运算 -->
-    <div class="section">
-        <h2>4️⃣ 连接 (Join) - ⨝</h2>
-        <div class="formula">Student ⨝<sub>Student.Sno=SC.Sno</sub> SC</div>
-        <div class="explanation">💡 根据条件筛选笛卡尔积（只保留学号相等的行）</div>
-        <button onclick="showJoin()">执行连接运算</button>
-        <div id="joinResult"></div>
-    </div>
-
-    <!-- 5. 自然连接 -->
-    <div class="section">
-        <h2>5️⃣ 自然连接 (Natural Join) - ⨝</h2>
-        <div class="formula">Student ⨝ SC</div>
-        <div class="explanation">💡 先等值连接（相同列名自动匹配），再去除重复列</div>
-        <button onclick="showNaturalJoin()">执行自然连接</button>
-        <div id="naturalJoinResult"></div>
-    </div>
-
-    <!-- 6. 左外连接 -->
-    <div class="section">
-        <h2>6️⃣ 左外连接 (Left Outer Join) - ⟕</h2>
-        <div class="formula">Student ⟕ SC</div>
-        <div class="explanation">💡 先自然连接，保留左表(Student)所有行，右表无匹配用NULL填充</div>
-        <button onclick="showLeftJoin()">执行左外连接</button>
-        <div id="leftJoinResult"></div>
-    </div>
-
-    <!-- 7. 右外连接 -->
-    <div class="section">
-        <h2>7️⃣ 右外连接 (Right Outer Join) - ⟖</h2>
-        <div class="formula">Student ⟖ SC</div>
-        <div class="explanation">💡 先自然连接，保留右表(SC)所有行，左表无匹配用NULL填充</div>
-        <button onclick="showRightJoin()">执行右外连接</button>
-        <div id="rightJoinResult"></div>
-    </div>
-
-    <!-- 8. 全外连接 -->
-    <div class="section">
-        <h2>8️⃣ 全外连接 (Full Outer Join) - ⟗</h2>
-        <div class="formula">Student ⟗ SC</div>
-        <div class="explanation">💡 左右表都保留，无匹配的用NULL填充</div>
-        <button onclick="showFullJoin()">执行全外连接</button>
-        <div id="fullJoinResult"></div>
-    </div>
-
-    <!-- 9. 除法运算 -->
-    <div class="section">
-        <h2>9️⃣ 除法 (Division) - ÷</h2>
-        <div class="formula">SC ÷ Course</div>
-        <div class="explanation">💡 查询选修了<strong>所有</strong>课程的学生（遇到"所有"、"全部"、"至少"就用除号）</div>
-        <div class="explanation">📖 SC ÷ Course = 哪些学生(Sno)的课程号(Cno)包含了Course表中的所有课程</div>
-        <button onclick="showDivision()">执行除法运算</button>
-        <div id="divisionResult"></div>
     </div>
 
     <script>
