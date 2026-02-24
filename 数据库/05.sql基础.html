@@ -1,0 +1,886 @@
+<!--
+SQL基础学习笔记
+1. SQL功能：DDL(定义) DML(操纵) DCL(控制)
+2. 创建/修改/删除表：CREATE ALTER DROP
+3. 单表查询：SELECT FROM WHERE GROUP BY HAVING ORDER BY LIMIT
+4. 执行顺序：FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT
+5. WHERE条件：比较 BETWEEN IN LIKE IS NULL AND/OR
+6. 聚集函数：COUNT SUM AVG MAX MIN（不可用于WHERE）
+7. 分组：GROUP BY 分组，HAVING 对分组筛选
+8. 排序：ORDER BY，DESC降序，默认升序
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL基础运算示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f0f4ff;
+            display: flex;
+            min-height: 100vh;
+        }
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f0f4ff;
+        }
+        .right-panel {
+            width: 500px;
+            background: white;
+            border-left: 3px solid #2196F3;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #2196F3;
+            margin-top: 30px;
+            border-left: 5px solid #2196F3;
+            padding-left: 10px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .sql-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre;
+        }
+        .kw  { color: #569cd6; font-weight: bold; }   /* 关键字 */
+        .fn  { color: #dcdcaa; }                       /* 函数 */
+        .str { color: #ce9178; }                       /* 字符串 */
+        .num { color: #b5cea8; }                       /* 数字 */
+        .cmt { color: #6a9955; font-style: italic; }   /* 注释 */
+        .col { color: #9cdcfe; }                       /* 列名 */
+        .explanation {
+            color: #555;
+            font-style: italic;
+            margin: 10px 0;
+            padding: 10px 15px;
+            background: #fff8e1;
+            border-left: 4px solid #ff9800;
+            border-radius: 0 4px 4px 0;
+            line-height: 1.7;
+        }
+        .tip-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1565c0;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 13px;
+            color: #1565c0;
+            line-height: 1.7;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        td {
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) { background-color: #f5f5f5; }
+        tr:hover { background-color: #e3f2fd; }
+        .result-title {
+            font-weight: bold;
+            color: #1565c0;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        .table-wrapper { margin-bottom: 20px; }
+        .table-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 15px;
+            background: #bbdefb;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 5px 3px;
+        }
+        button:hover { background: #1976d2; }
+        .btn-secondary {
+            background: #607d8b;
+        }
+        .btn-secondary:hover { background: #455a64; }
+        .null-cell { color: #aaa; font-style: italic; }
+        .highlight-row { background-color: #fff9c4 !important; }
+        .sticky-title {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding: 10px 0;
+            border-bottom: 2px solid #2196F3;
+            margin-bottom: 20px;
+        }
+        .exec-order {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .exec-step {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            border: 1px solid #90caf9;
+        }
+        .exec-arrow {
+            color: #90a4ae;
+            font-size: 18px;
+            line-height: 30px;
+        }
+        .schema-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .schema-table th {
+            background: #455a64;
+            padding: 8px 12px;
+        }
+        .schema-table td {
+            padding: 7px 12px;
+        }
+        .tag-pk { background: #ffcc02; color: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .tag-nn { background: #ef5350; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+        .section-group-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1565c0;
+            margin: 30px 0 5px 0;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 8px;
+            border-left: 6px solid #1565c0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 左侧：SQL示例区 -->
+<div class="left-panel">
+    <h1>🗄️ SQL基础语句详解与示例</h1>
+
+    <!-- ===== DDL ===== -->
+    <div class="section-group-title">📐 DDL — 数据定义语言（CREATE / ALTER / DROP）</div>
+
+    <!-- 1. CREATE TABLE -->
+    <div class="section">
+        <h2>1️⃣ 创建表 — CREATE TABLE</h2>
+        <div class="sql-block"><span class="kw">CREATE TABLE</span> <span class="col">Student</span> (
+    <span class="col">Sno</span>    <span class="kw">VARCHAR</span>(<span class="num">20</span>) <span class="kw">NOT NULL</span>,
+    <span class="col">Sname</span>  <span class="kw">VARCHAR</span>(<span class="num">50</span>),
+    <span class="col">Age</span>    <span class="kw">INT</span>,
+    <span class="col">Sex</span>    <span class="kw">VARCHAR</span>(<span class="num">10</span>),
+    <span class="kw">PRIMARY KEY</span> (<span class="col">Sno</span>)
+);</div>
+        <div class="explanation">
+            💡 常用数据类型：<code>VARCHAR(n)</code> 变长字符串 / <code>INT</code> 整数 / <code>FLOAT</code> 浮点数<br>
+            💡 <code>NOT NULL</code> 非空约束 / <code>PRIMARY KEY</code> 主键（唯一 + 非空）<br>
+            💡 VARCHAR 建议取 10 / 20 / 50 等常见长度
+        </div>
+        <button onclick="showCreateSchema()">查看表结构</button>
+        <div id="createResult"></div>
+    </div>
+
+    <!-- 2. ALTER TABLE -->
+    <div class="section">
+        <h2>2️⃣ 修改表结构 — ALTER TABLE</h2>
+        <div class="sql-block"><span class="cmt">-- 改表名</span>
+<span class="kw">ALTER TABLE</span> <span class="col">Student</span> <span class="kw">RENAME TO</span> <span class="col">StudentInfo</span>;
+
+<span class="cmt">-- 增加列</span>
+<span class="kw">ALTER TABLE</span> <span class="col">Student</span> <span class="kw">ADD COLUMN</span> <span class="col">Email</span> <span class="kw">VARCHAR</span>(<span class="num">100</span>);
+
+<span class="cmt">-- 删除列</span>
+<span class="kw">ALTER TABLE</span> <span class="col">Student</span> <span class="kw">DROP COLUMN</span> <span class="col">Age</span>;
+
+<span class="cmt">-- 修改列名及类型</span>
+<span class="kw">ALTER TABLE</span> <span class="col">Student</span> <span class="kw">CHANGE COLUMN</span> <span class="col">Sname</span> <span class="col">StudentName</span> <span class="kw">VARCHAR</span>(<span class="num">100</span>);</div>
+        <div class="explanation">
+            💡 ALTER 只改结构，不影响数据（除 DROP COLUMN 会丢失该列数据）<br>
+            💡 RENAME / ADD / DROP / CHANGE 四种子命令对应改名、加列、删列、改列
+        </div>
+        <button onclick="showAlterDemo()">查看演示</button>
+        <div id="alterResult"></div>
+    </div>
+
+    <!-- 3. DROP TABLE -->
+    <div class="section">
+        <h2>3️⃣ 删除表 — DROP TABLE</h2>
+        <div class="sql-block"><span class="kw">DROP TABLE</span> <span class="col">StudentInfo</span>;</div>
+        <div class="explanation">
+            ⚠️ DROP TABLE 会删除整个表（结构 + 数据），不可恢复！<br>
+            💡 对比：<code>DELETE FROM Student</code> 只删数据，保留表结构
+        </div>
+        <div class="tip-box">
+            📌 三者区别：<br>
+            • <code>DROP TABLE T</code> → 删表（结构+数据全没）<br>
+            • <code>DELETE FROM T</code> → 删数据（结构保留）<br>
+            • <code>TRUNCATE TABLE T</code> → 清空数据（结构保留，更快）
+        </div>
+    </div>
+
+    <!-- ===== DML ===== -->
+    <div class="section-group-title">🔍 DML — 数据操纵语言（SELECT / INSERT / UPDATE / DELETE）</div>
+
+    <!-- 执行顺序说明 -->
+    <div class="section">
+        <h2>⚙️ SELECT 执行顺序</h2>
+        <div class="exec-order">
+            <span class="exec-step">① FROM</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">② WHERE</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">③ GROUP BY</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">④ HAVING</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">⑤ SELECT</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">⑥ ORDER BY</span>
+            <span class="exec-arrow">→</span>
+            <span class="exec-step">⑦ LIMIT</span>
+        </div>
+        <div class="explanation">
+            💡 写的顺序：SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT<br>
+            💡 执行顺序与书写顺序不同！<code>WHERE</code> 先于 <code>SELECT</code>，所以 WHERE 中<strong>不能</strong>用 SELECT 定义的列别名<br>
+            💡 <code>HAVING</code> 在 GROUP 之后执行，可以使用聚集函数；而 WHERE 不行
+        </div>
+    </div>
+
+    <!-- 4. SELECT * -->
+    <div class="section">
+        <h2>4️⃣ 基本查询 — SELECT *</h2>
+        <div class="sql-block"><span class="cmt">-- 查询所有列</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> <span class="col">Student</span>;
+
+<span class="cmt">-- 查询指定列</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Sname</span>
+<span class="kw">FROM</span> <span class="col">Student</span>;</div>
+        <div class="explanation">💡 <code>*</code> 代表所有列；指定列名可只查部分列</div>
+        <button onclick="showSelectAll()">SELECT *</button>
+        <button onclick="showSelectCols()">SELECT Sno, Sname</button>
+        <div id="selectResult"></div>
+    </div>
+
+    <!-- 5. 表达式与列别名 -->
+    <div class="section">
+        <h2>5️⃣ 表达式 & 列别名 — AS</h2>
+        <div class="sql-block"><span class="cmt">-- 表达式计算出生年份，AS 起别名</span>
+<span class="kw">SELECT</span> <span class="col">Sname</span>, <span class="num">2026</span> - <span class="col">Age</span> <span class="kw">AS</span> <span class="col">BirthYear</span>
+<span class="kw">FROM</span> <span class="col">Student</span>;
+
+<span class="cmt">-- 表起别名后，SELECT 可用别名引用列</span>
+<span class="kw">SELECT</span> <span class="col">S</span>.<span class="col">Sname</span>, <span class="col">S</span>.<span class="col">Age</span>
+<span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">AS</span> <span class="col">S</span>;</div>
+        <div class="explanation">
+            💡 <code>AS</code> 关键字可省略，直接写 <code>列名 别名</code><br>
+            ⚠️ WHERE 子句中<strong>不能</strong>使用 SELECT 中定义的列别名（WHERE 先于 SELECT 执行）
+        </div>
+        <button onclick="showAlias()">执行表达式与别名查询</button>
+        <div id="aliasResult"></div>
+    </div>
+
+    <!-- 6. DISTINCT -->
+    <div class="section">
+        <h2>6️⃣ 去重 — SELECT DISTINCT</h2>
+        <div class="sql-block"><span class="cmt">-- 查询出现过的所有院系（去重）</span>
+<span class="kw">SELECT DISTINCT</span> <span class="col">Sex</span>
+<span class="kw">FROM</span> <span class="col">Student</span>;
+
+<span class="cmt">-- 多列去重（两列组合相同才算重复）</span>
+<span class="kw">SELECT DISTINCT</span> <span class="col">Sex</span>, <span class="col">Age</span>
+<span class="kw">FROM</span> <span class="col">Student</span>;</div>
+        <div class="explanation">💡 DISTINCT 对结果所有列组合去重，放在 SELECT 后、第一个列名前</div>
+        <button onclick="showDistinct1()">DISTINCT Sex</button>
+        <button onclick="showDistinct2()">DISTINCT Sex, Age</button>
+        <div id="distinctResult"></div>
+    </div>
+
+    <!-- ===== WHERE ===== -->
+    <div class="section-group-title">🔎 WHERE 条件详解</div>
+
+    <!-- 7. 比较运算符 -->
+    <div class="section">
+        <h2>7️⃣ 比较运算符</h2>
+        <div class="sql-block"><span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">WHERE</span> <span class="col">Age</span> &gt;= <span class="num">20</span>;
+
+<span class="cmt">-- 支持：= &gt; &lt; &gt;= &lt;= != &lt;&gt; !&gt; !&lt;</span>
+<span class="cmt">-- 以及 NOT 取反：NOT Age &gt;= 20</span></div>
+        <div class="explanation">💡 <code>!=</code> 和 <code>&lt;&gt;</code> 都表示不等于；<code>NOT 条件</code> 可对任意条件取反</div>
+        <button onclick="whereCompare('>=', 20)">Age &gt;= 20</button>
+        <button onclick="whereCompare('=', '男')">Sex = '男'</button>
+        <button onclick="whereCompare('!=', '男')">Sex != '男'</button>
+        <div id="whereCompareResult"></div>
+    </div>
+
+    <!-- 8. BETWEEN AND -->
+    <div class="section">
+        <h2>8️⃣ 范围查询 — BETWEEN AND</h2>
+        <div class="sql-block"><span class="cmt">-- 年龄在 19 到 21 之间（含边界）</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Age</span> <span class="kw">BETWEEN</span> <span class="num">19</span> <span class="kw">AND</span> <span class="num">21</span>;
+
+<span class="cmt">-- 取反：NOT BETWEEN</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Age</span> <span class="kw">NOT BETWEEN</span> <span class="num">19</span> <span class="kw">AND</span> <span class="num">21</span>;</div>
+        <div class="explanation">💡 等价于 <code>Age &gt;= 19 AND Age &lt;= 21</code>，含两端边界</div>
+        <button onclick="whereBetween(19, 21)">Age BETWEEN 19 AND 21</button>
+        <button onclick="whereNotBetween(19, 21)">Age NOT BETWEEN 19 AND 21</button>
+        <div id="whereBetweenResult"></div>
+    </div>
+
+    <!-- 9. IN -->
+    <div class="section">
+        <h2>9️⃣ 集合查询 — IN</h2>
+        <div class="sql-block"><span class="cmt">-- 查询 S01 或 S03 的学生</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> <span class="kw">IN</span> (<span class="str">'S01'</span>, <span class="str">'S03'</span>);
+
+<span class="cmt">-- 取反：NOT IN</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> <span class="kw">NOT IN</span> (<span class="str">'S01'</span>, <span class="str">'S03'</span>);</div>
+        <div class="explanation">💡 <code>IN (v1, v2, ...)</code> 等价于 <code>= v1 OR = v2 OR ...</code>，更简洁</div>
+        <button onclick="whereIn(['S01','S03'])">Sno IN ('S01','S03')</button>
+        <button onclick="whereNotIn(['S01','S03'])">Sno NOT IN ('S01','S03')</button>
+        <div id="whereInResult"></div>
+    </div>
+
+    <!-- 10. LIKE -->
+    <div class="section">
+        <h2>🔟 模糊查询 — LIKE</h2>
+        <div class="sql-block"><span class="cmt">-- % 匹配任意长度字符</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">WHERE</span> <span class="col">Sname</span> <span class="kw">LIKE</span> <span class="str">'张%'</span>;
+
+<span class="cmt">-- _ 匹配单个字符（如：两字名）</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">WHERE</span> <span class="col">Sname</span> <span class="kw">LIKE</span> <span class="str">'__'</span>;
+
+<span class="cmt">-- 转义：查找名字中含 % 的（用 \ 转义）</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Course</span> <span class="kw">WHERE</span> <span class="col">Cname</span> <span class="kw">LIKE</span> <span class="str">'数%'</span>;</div>
+        <div class="explanation">
+            💡 <code>%</code>：任意0+个字符 | <code>_</code>：恰好1个字符<br>
+            💡 <code>\%</code> 和 <code>\_</code> 可匹配字面量的 % 和 _
+        </div>
+        <button onclick="whereLike('张%')">Sname LIKE '张%'</button>
+        <button onclick="whereLike('__')">Sname LIKE '__'（两字）</button>
+        <button onclick="whereLikeCoure('数%')">Course LIKE '数%'</button>
+        <div id="whereLikeResult"></div>
+    </div>
+
+    <!-- 11. IS NULL -->
+    <div class="section">
+        <h2>1️⃣1️⃣ 空值查询 — IS NULL</h2>
+        <div class="sql-block"><span class="cmt">-- 查询未登记成绩的选课记录</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Grade</span> <span class="kw">IS NULL</span>;
+
+<span class="cmt">-- 取反：IS NOT NULL</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Grade</span> <span class="kw">IS NOT NULL</span>;</div>
+        <div class="explanation">
+            ⚠️ NULL 不能用 <code>= NULL</code> 判断，必须用 <code>IS NULL</code>！<br>
+            💡 NULL 表示"未知/缺失"，任何与 NULL 的比较结果都是 NULL（非真非假）
+        </div>
+        <button onclick="whereNull(true)">Grade IS NULL</button>
+        <button onclick="whereNull(false)">Grade IS NOT NULL</button>
+        <div id="whereNullResult"></div>
+    </div>
+
+    <!-- 12. AND / OR -->
+    <div class="section">
+        <h2>1️⃣2️⃣ 逻辑运算 — AND / OR / NOT</h2>
+        <div class="sql-block"><span class="cmt">-- AND：同时满足两个条件</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Age</span> >= <span class="num">20</span> <span class="kw">AND</span> <span class="col">Sex</span> = <span class="str">'女'</span>;
+
+<span class="cmt">-- OR：满足任一条件</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Age</span> = <span class="num">19</span> <span class="kw">OR</span> <span class="col">Sex</span> = <span class="str">'女'</span>;
+
+<span class="cmt">-- 优先级 AND &gt; OR，括号可改变优先级</span></div>
+        <div class="explanation">
+            💡 优先级：<code>NOT</code> &gt; <code>AND</code> &gt; <code>OR</code><br>
+            💡 用括号明确优先级：<code>(A OR B) AND C</code>
+        </div>
+        <button onclick="whereAnd()">AND：Age≥20 且 Sex='女'</button>
+        <button onclick="whereOr()">OR：Age=19 或 Sex='女'</button>
+        <div id="whereLogicResult"></div>
+    </div>
+
+    <!-- ===== 聚集函数 ===== -->
+    <div class="section-group-title">📊 聚集函数 & 分组（GROUP BY / HAVING）</div>
+
+    <!-- 13. 聚集函数 -->
+    <div class="section">
+        <h2>1️⃣3️⃣ 聚集函数 — COUNT / SUM / AVG / MAX / MIN</h2>
+        <div class="sql-block"><span class="kw">SELECT</span>
+    <span class="fn">COUNT</span>(*),            <span class="cmt">-- 统计总行数</span>
+    <span class="fn">COUNT</span>(<span class="col">Grade</span>),       <span class="cmt">-- 统计非NULL行数</span>
+    <span class="fn">SUM</span>(<span class="col">Grade</span>),         <span class="cmt">-- 求和</span>
+    <span class="fn">AVG</span>(<span class="col">Grade</span>),         <span class="cmt">-- 平均值（忽略NULL）</span>
+    <span class="fn">MAX</span>(<span class="col">Grade</span>),         <span class="cmt">-- 最大值</span>
+    <span class="fn">MIN</span>(<span class="col">Grade</span>)          <span class="cmt">-- 最小值</span>
+<span class="kw">FROM</span> <span class="col">SC</span>;</div>
+        <div class="explanation">
+            ⚠️ 聚集函数只能用在 <code>SELECT</code> 和 <code>HAVING</code> 中，<strong>不能用于 WHERE</strong>！<br>
+            💡 <code>COUNT(*)</code> 含NULL行，<code>COUNT(列名)</code> 跳过NULL行<br>
+            💡 <code>AVG/SUM/MAX/MIN</code> 计算时自动忽略 NULL
+        </div>
+        <button onclick="showAggregate()">执行所有聚集函数</button>
+        <div id="aggregateResult"></div>
+    </div>
+
+    <!-- 14. GROUP BY -->
+    <div class="section">
+        <h2>1️⃣4️⃣ 分组查询 — GROUP BY</h2>
+        <div class="sql-block"><span class="cmt">-- 统计每门课程的选课人数和平均分</span>
+<span class="kw">SELECT</span> <span class="col">Cno</span>, <span class="fn">COUNT</span>(<span class="col">Sno</span>) <span class="kw">AS</span> <span class="col">StudentCount</span>, <span class="fn">AVG</span>(<span class="col">Grade</span>) <span class="kw">AS</span> <span class="col">AvgGrade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">GROUP BY</span> <span class="col">Cno</span>;</div>
+        <div class="explanation">
+            💡 GROUP BY 把相同值的行归为一组，聚集函数对每组分别计算<br>
+            💡 SELECT 中未用聚集函数的列，<strong>必须出现在 GROUP BY 中</strong>
+        </div>
+        <button onclick="showGroupBy()">按课程分组统计</button>
+        <div id="groupByResult"></div>
+    </div>
+
+    <!-- 15. GROUP BY + HAVING -->
+    <div class="section">
+        <h2>1️⃣5️⃣ 分组筛选 — HAVING</h2>
+        <div class="sql-block"><span class="cmt">-- 查询选课人数 &gt; 1 的课程</span>
+<span class="kw">SELECT</span> <span class="col">Cno</span>, <span class="fn">COUNT</span>(<span class="col">Sno</span>) <span class="kw">AS</span> <span class="col">StudentCount</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">GROUP BY</span> <span class="col">Cno</span>
+<span class="kw">HAVING</span> <span class="fn">COUNT</span>(<span class="col">Sno</span>) > <span class="num">1</span>;</div>
+        <div class="explanation">
+            💡 <code>HAVING</code> 对分组后的结果筛选，可用聚集函数<br>
+            💡 <code>WHERE</code> 对原始行筛选（在分组前），<strong>不能用聚集函数</strong><br>
+            📌 口诀：<strong>WHERE 筛行，HAVING 筛组</strong>
+        </div>
+        <button onclick="showHaving(1)">选课人数 &gt; 1</button>
+        <button onclick="showHaving(2)">选课人数 &gt; 2</button>
+        <div id="havingResult"></div>
+    </div>
+
+    <!-- ===== 排序和分页 ===== -->
+    <div class="section-group-title">📋 排序与分页（ORDER BY / LIMIT）</div>
+
+    <!-- 16. ORDER BY -->
+    <div class="section">
+        <h2>1️⃣6️⃣ 排序 — ORDER BY</h2>
+        <div class="sql-block"><span class="cmt">-- 按成绩降序排列（DESC）</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">ORDER BY</span> <span class="col">Grade</span> <span class="kw">DESC</span>;
+
+<span class="cmt">-- 多列排序：先按成绩降序，再按学号升序</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">ORDER BY</span> <span class="col">Grade</span> <span class="kw">DESC</span>, <span class="col">Sno</span> <span class="kw">ASC</span>;</div>
+        <div class="explanation">
+            💡 默认升序 (<code>ASC</code>)，降序用 <code>DESC</code><br>
+            💡 多列排序中，前面列优先级更高（前列相同时才看后列）<br>
+            💡 NULL 值在排序中通常排在最前（ASC时）或最后（DESC时），各数据库有差异
+        </div>
+        <button onclick="showOrderBy(false)">Grade ASC（升序）</button>
+        <button onclick="showOrderBy(true)">Grade DESC（降序）</button>
+        <button onclick="showOrderByMulti()">Grade DESC, Sno ASC</button>
+        <div id="orderByResult"></div>
+    </div>
+
+    <!-- 17. LIMIT -->
+    <div class="section">
+        <h2>1️⃣7️⃣ 分页 — LIMIT</h2>
+        <div class="sql-block"><span class="cmt">-- 返回前 3 条记录</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">ORDER BY</span> <span class="col">Grade</span> <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">3</span>;
+
+<span class="cmt">-- 分页：跳过前 2 条，取 3 条（第2页）</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">ORDER BY</span> <span class="col">Grade</span> <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">3</span> <span class="kw">OFFSET</span> <span class="num">2</span>;</div>
+        <div class="explanation">
+            💡 <code>LIMIT n</code>：返回前 n 条<br>
+            💡 <code>LIMIT n OFFSET m</code>：跳过 m 条后取 n 条，用于分页<br>
+            💡 也可写成 <code>LIMIT m, n</code>（部分数据库支持）
+        </div>
+        <button onclick="showLimit(3, 0)">前3条（TOP3）</button>
+        <button onclick="showLimit(3, 2)">LIMIT 3 OFFSET 2</button>
+        <div id="limitResult"></div>
+    </div>
+
+    <!-- ===== DCL ===== -->
+    <div class="section-group-title">🔐 DCL — 数据控制语言（GRANT / REVOKE）</div>
+
+    <!-- 18. GRANT / REVOKE -->
+    <div class="section">
+        <h2>1️⃣8️⃣ 权限管理 — GRANT / REVOKE</h2>
+        <div class="sql-block"><span class="cmt">-- 授予用户 alice 对 Student 表的查询权限</span>
+<span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="col">Student</span> <span class="kw">TO</span> <span class="col">alice</span>;
+
+<span class="cmt">-- 授予多种权限，并允许再转授</span>
+<span class="kw">GRANT</span> <span class="kw">SELECT</span>, <span class="kw">INSERT</span>, <span class="kw">UPDATE</span> <span class="kw">ON</span> <span class="col">SC</span>
+<span class="kw">TO</span> <span class="col">bob</span> <span class="kw">WITH GRANT OPTION</span>;
+
+<span class="cmt">-- 撤销权限</span>
+<span class="kw">REVOKE</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="col">Student</span> <span class="kw">FROM</span> <span class="col">alice</span>;</div>
+        <div class="explanation">
+            💡 <code>GRANT 权限 ON 表 TO 用户</code>：授权<br>
+            💡 <code>WITH GRANT OPTION</code>：允许被授权用户将权限再转授他人<br>
+            💡 <code>REVOKE 权限 ON 表 FROM 用户</code>：撤权<br>
+            📌 常见权限：SELECT / INSERT / UPDATE / DELETE / ALL PRIVILEGES
+        </div>
+        <div class="tip-box">
+            📋 权限对比：<br>
+            <table style="margin:8px 0; font-size:12px; width:auto">
+                <tr><th>权限</th><th>说明</th></tr>
+                <tr><td>SELECT</td><td>查询数据</td></tr>
+                <tr><td>INSERT</td><td>插入数据</td></tr>
+                <tr><td>UPDATE</td><td>修改数据</td></tr>
+                <tr><td>DELETE</td><td>删除数据</td></tr>
+                <tr><td>ALL PRIVILEGES</td><td>所有权限</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 19. INSERT / UPDATE / DELETE -->
+    <div class="section">
+        <h2>1️⃣9️⃣ 增删改 — INSERT / UPDATE / DELETE</h2>
+        <div class="sql-block"><span class="cmt">-- 插入一行</span>
+<span class="kw">INSERT INTO</span> <span class="col">Student</span> (<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Age</span>, <span class="col">Sex</span>)
+<span class="kw">VALUES</span> (<span class="str">'S06'</span>, <span class="str">'周八'</span>, <span class="num">23</span>, <span class="str">'男'</span>);
+
+<span class="cmt">-- 修改数据</span>
+<span class="kw">UPDATE</span> <span class="col">Student</span>
+<span class="kw">SET</span> <span class="col">Age</span> = <span class="num">21</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> = <span class="str">'S01'</span>;
+
+<span class="cmt">-- 删除数据</span>
+<span class="kw">DELETE FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> = <span class="str">'S06'</span>;</div>
+        <div class="explanation">
+            💡 INSERT：可省略列名列表（此时须按表定义顺序给值）<br>
+            ⚠️ UPDATE/DELETE 不加 WHERE 会修改/删除所有行！<br>
+            💡 DELETE 只删数据，表结构保留；DROP TABLE 连结构一起删
+        </div>
+        <button onclick="showInsertDemo()">模拟 INSERT 结果</button>
+        <button onclick="showUpdateDemo()">模拟 UPDATE 结果</button>
+        <button onclick="showDeleteDemo()">模拟 DELETE 结果</button>
+        <div id="dmlResult"></div>
+    </div>
+
+</div>
+
+<!-- 右侧：基础数据表（固定） -->
+<div class="right-panel">
+    <div class="sticky-title">
+        <h2 style="margin:0; color:#1565c0;">🗂️ 基础数据表</h2>
+    </div>
+
+    <div class="table-wrapper">
+        <div class="table-name">📋 学生表 (Student)</div>
+        <table id="studentTable"></table>
+    </div>
+
+    <div class="table-wrapper">
+        <div class="table-name">📋 课程表 (Course)</div>
+        <table id="courseTable"></table>
+    </div>
+
+    <div class="table-wrapper">
+        <div class="table-name">📋 选课表 (SC)&nbsp;<span style="font-size:11px;color:#888">含NULL成绩</span></div>
+        <table id="scTable"></table>
+    </div>
+</div>
+
+<script>
+// ===================== 基础数据 =====================
+const students = [
+    {Sno:'S01', Sname:'张三', Age:19, Sex:'男'},
+    {Sno:'S02', Sname:'李四', Age:20, Sex:'女'},
+    {Sno:'S03', Sname:'王五', Age:22, Sex:'男'},
+    {Sno:'S04', Sname:'赵六', Age:21, Sex:'女'},
+    {Sno:'S05', Sname:'孙七', Age:19, Sex:'男'},
+];
+const courses = [
+    {Cno:'C01', Cname:'数据库',   Credit:4},
+    {Cno:'C02', Cname:'数据结构', Credit:3},
+    {Cno:'C03', Cname:'操作系统', Credit:4},
+];
+const sc = [
+    {Sno:'S01', Cno:'C01', Grade:85},
+    {Sno:'S01', Cno:'C02', Grade:90},
+    {Sno:'S02', Cno:'C01', Grade:88},
+    {Sno:'S02', Cno:'C02', Grade:92},
+    {Sno:'S02', Cno:'C03', Grade:87},
+    {Sno:'S03', Cno:'C01', Grade:78},
+    {Sno:'S04', Cno:'C02', Grade:95},
+    {Sno:'S05', Cno:'C01', Grade:null},  // NULL演示
+];
+
+// ===================== 渲染工具 =====================
+function renderTable(data, elementId) {
+    const el = document.getElementById(elementId);
+    if (!data || data.length === 0) { el.innerHTML = '<tr><td colspan="99" style="color:#aaa;text-align:center">（空结果）</td></tr>'; return; }
+    const keys = Object.keys(data[0]);
+    let html = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+    data.forEach(row => {
+        html += '<tr>' + keys.map(k => {
+            const v = row[k];
+            return v === null ? `<td class="null-cell">NULL</td>` : `<td>${v}</td>`;
+        }).join('') + '</tr>';
+    });
+    el.innerHTML = html;
+}
+
+function renderResult(containerId, data, title) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = `
+        <div class="result-title">📊 ${title}（共 ${data.length} 行）</div>
+        <table id="${containerId}_t"></table>`;
+    renderTable(data, `${containerId}_t`);
+}
+
+function renderSingle(containerId, obj, title) {
+    const c = document.getElementById(containerId);
+    const keys = Object.keys(obj);
+    let html = `<div class="result-title">📊 ${title}</div>
+        <table><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr>
+        <tr>${keys.map(k=>`<td><strong>${obj[k]}</strong></td>`).join('')}</tr></table>`;
+    c.innerHTML = html;
+}
+
+// 初始化右侧基础表
+renderTable(students, 'studentTable');
+renderTable(courses,  'courseTable');
+renderTable(sc,       'scTable');
+
+// ===================== DDL 演示 =====================
+function showCreateSchema() {
+    const schema = [
+        {列名:'Sno',   类型:'VARCHAR(20)', 约束:'NOT NULL / PRIMARY KEY'},
+        {列名:'Sname', 类型:'VARCHAR(50)',  约束:''},
+        {列名:'Age',   类型:'INT',          约束:''},
+        {列名:'Sex',   类型:'VARCHAR(10)',  约束:''},
+    ];
+    renderResult('createResult', schema, 'Student 表结构（CREATE TABLE 后）');
+}
+
+function showAlterDemo() {
+    const before = [{Sno:'S01', Sname:'张三', Age:19, Sex:'男'}, {Sno:'S02', Sname:'李四', Age:20, Sex:'女'}];
+    const after  = [{Sno:'S01', StudentName:'张三', Sex:'男', Email:null}, {Sno:'S02', StudentName:'李四', Sex:'女', Email:null}];
+    const c = document.getElementById('alterResult');
+    c.innerHTML = `
+        <div class="result-title">执行前（原 Student 表）</div>
+        <table id="alterBefore"></table>
+        <div class="result-title" style="margin-top:12px">执行后：RENAME列→StudentName，ADD EMAIL，DROP Age</div>
+        <table id="alterAfter"></table>`;
+    renderTable(before, 'alterBefore');
+    renderTable(after,  'alterAfter');
+}
+
+// ===================== SELECT 演示 =====================
+function showSelectAll()  { renderResult('selectResult', students, 'SELECT * FROM Student'); }
+function showSelectCols() { renderResult('selectResult', students.map(s=>({Sno:s.Sno, Sname:s.Sname})), 'SELECT Sno, Sname FROM Student'); }
+
+function showAlias() {
+    const r = students.map(s => ({Sname: s.Sname, BirthYear: 2026 - s.Age}));
+    renderResult('aliasResult', r, 'SELECT Sname, 2026-Age AS BirthYear');
+}
+
+function showDistinct1() {
+    const seen = new Set(), r = [];
+    students.forEach(s => { if (!seen.has(s.Sex)) { seen.add(s.Sex); r.push({Sex: s.Sex}); } });
+    renderResult('distinctResult', r, 'SELECT DISTINCT Sex');
+}
+function showDistinct2() {
+    const seen = new Set(), r = [];
+    students.forEach(s => { const k = s.Sex+s.Age; if (!seen.has(k)) { seen.add(k); r.push({Sex:s.Sex, Age:s.Age}); } });
+    renderResult('distinctResult', r, 'SELECT DISTINCT Sex, Age');
+}
+
+// ===================== WHERE 演示 =====================
+function whereCompare(op, val) {
+    let r, label;
+    if (op === '>=' && val === 20) { r = students.filter(s=>s.Age>=20); label = 'Age >= 20'; }
+    else if (op === '=' && val === '男') { r = students.filter(s=>s.Sex==='男'); label = "Sex = '男'"; }
+    else { r = students.filter(s=>s.Sex!=='男'); label = "Sex != '男'"; }
+    renderResult('whereCompareResult', r, 'WHERE ' + label);
+}
+
+function whereBetween(lo, hi)    { renderResult('whereBetweenResult', students.filter(s=>s.Age>=lo&&s.Age<=hi), `WHERE Age BETWEEN ${lo} AND ${hi}`); }
+function whereNotBetween(lo, hi) { renderResult('whereBetweenResult', students.filter(s=>s.Age<lo||s.Age>hi), `WHERE Age NOT BETWEEN ${lo} AND ${hi}`); }
+
+function whereIn(list)    { renderResult('whereInResult', students.filter(s=>list.includes(s.Sno)), `WHERE Sno IN (${list.map(v=>"'"+v+"'").join(',')})`); }
+function whereNotIn(list) { renderResult('whereInResult', students.filter(s=>!list.includes(s.Sno)), `WHERE Sno NOT IN (${list.map(v=>"'"+v+"'").join(',')})`); }
+
+function pct(pattern, str) {
+    // 把 SQL LIKE 模式转成正则
+    let reg = '^' + pattern.replace(/%/g,'.*').replace(/_/g,'.') + '$';
+    return new RegExp(reg).test(str);
+}
+function whereLike(pattern) {
+    renderResult('whereLikeResult', students.filter(s=>pct(pattern,s.Sname)), `WHERE Sname LIKE '${pattern}'`);
+}
+function whereLikeCoure(pattern) {
+    renderResult('whereLikeResult', courses.filter(c=>pct(pattern,c.Cname)), `WHERE Cname LIKE '${pattern}'`);
+}
+
+function whereNull(isNull) {
+    const r = isNull ? sc.filter(r=>r.Grade===null) : sc.filter(r=>r.Grade!==null);
+    renderResult('whereNullResult', r, isNull ? 'WHERE Grade IS NULL' : 'WHERE Grade IS NOT NULL');
+}
+
+function whereAnd() { renderResult('whereLogicResult', students.filter(s=>s.Age>=20&&s.Sex==='女'), "WHERE Age>=20 AND Sex='女'"); }
+function whereOr()  { renderResult('whereLogicResult', students.filter(s=>s.Age===19||s.Sex==='女'), "WHERE Age=19 OR Sex='女'"); }
+
+// ===================== 聚集函数 =====================
+function showAggregate() {
+    const grades = sc.map(r=>r.Grade).filter(g=>g!==null);
+    const obj = {
+        'COUNT(*)':        sc.length,
+        'COUNT(Grade)':    grades.length,
+        'SUM(Grade)':      grades.reduce((a,b)=>a+b, 0),
+        'AVG(Grade)':      (grades.reduce((a,b)=>a+b,0)/grades.length).toFixed(2),
+        'MAX(Grade)':      Math.max(...grades),
+        'MIN(Grade)':      Math.min(...grades),
+    };
+    renderSingle('aggregateResult', obj, '对 SC 表执行聚集函数');
+}
+
+// ===================== GROUP BY / HAVING =====================
+function groupByCno(minCount) {
+    const map = {};
+    sc.forEach(r => {
+        if (!map[r.Cno]) map[r.Cno] = {Cno:r.Cno, grades:[], count:0};
+        map[r.Cno].count++;
+        if (r.Grade !== null) map[r.Cno].grades.push(r.Grade);
+    });
+    return Object.values(map).map(g => ({
+        Cno:          g.Cno,
+        StudentCount: g.count,
+        AvgGrade:     g.grades.length ? (g.grades.reduce((a,b)=>a+b,0)/g.grades.length).toFixed(1) : 'NULL'
+    })).filter(g => minCount === undefined || g.StudentCount > minCount);
+}
+function showGroupBy()      { renderResult('groupByResult', groupByCno(), 'GROUP BY Cno — 各课程选课人数和平均分'); }
+function showHaving(n)      { renderResult('havingResult',  groupByCno(n), `GROUP BY Cno HAVING COUNT(Sno) > ${n}`); }
+
+// ===================== ORDER BY / LIMIT =====================
+function showOrderBy(desc) {
+    const r = [...sc].sort((a,b)=>{
+        const ga = a.Grade??-Infinity, gb = b.Grade??-Infinity;
+        return desc ? gb-ga : ga-gb;
+    });
+    renderResult('orderByResult', r, `ORDER BY Grade ${desc?'DESC':'ASC'}`);
+}
+function showOrderByMulti() {
+    const r = [...sc].sort((a,b)=>{
+        const ga = a.Grade??-Infinity, gb = b.Grade??-Infinity;
+        if (gb !== ga) return gb-ga;
+        return a.Sno.localeCompare(b.Sno);
+    });
+    renderResult('orderByResult', r, 'ORDER BY Grade DESC, Sno ASC');
+}
+
+function showLimit(n, offset) {
+    const sorted = [...sc].sort((a,b)=>(b.Grade??-Infinity)-(a.Grade??-Infinity));
+    const r = sorted.slice(offset, offset+n);
+    const label = offset > 0 ? `LIMIT ${n} OFFSET ${offset}` : `LIMIT ${n}`;
+    renderResult('limitResult', r, `ORDER BY Grade DESC ${label}`);
+}
+
+// ===================== INSERT / UPDATE / DELETE =====================
+function showInsertDemo() {
+    const newRow = {Sno:'S06', Sname:'周八', Age:23, Sex:'男'};
+    const r = [...students, newRow];
+    const c = document.getElementById('dmlResult');
+    c.innerHTML = `<div class="result-title">📊 INSERT 后 Student 表（共 ${r.length} 行，新增行高亮）</div><table id="dmlT"></table>`;
+    const el = document.getElementById('dmlT');
+    const keys = Object.keys(r[0]);
+    let html = '<tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr>';
+    r.forEach((row,i) => {
+        const cls = i===r.length-1 ? ' class="highlight-row"' : '';
+        html += `<tr${cls}>`+keys.map(k=>`<td>${row[k]}</td>`).join('')+'</tr>';
+    });
+    el.innerHTML = html;
+}
+function showUpdateDemo() {
+    const r = students.map(s => s.Sno==='S01' ? {...s, Age:21} : {...s});
+    const c = document.getElementById('dmlResult');
+    c.innerHTML = `<div class="result-title">📊 UPDATE 后（S01 Age 改为 21，高亮）</div><table id="dmlT"></table>`;
+    const el = document.getElementById('dmlT');
+    const keys = Object.keys(r[0]);
+    let html = '<tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr>';
+    r.forEach(row => {
+        const cls = row.Sno==='S01' ? ' class="highlight-row"' : '';
+        html += `<tr${cls}>`+keys.map(k=>`<td>${row[k]}</td>`).join('')+'</tr>';
+    });
+    el.innerHTML = html;
+}
+function showDeleteDemo() {
+    const r = students.filter(s=>s.Sno!=='S05');
+    renderResult('dmlResult', r, "DELETE WHERE Sno='S05' — 已删除孙七");
+}
+</script>
+</body>
+</html>
