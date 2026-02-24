@@ -1,4 +1,4 @@
-<!-- 
+<!--
 1. 连接查询：一个查询涉及多张表
 2. 等值连接：连接条件是等值比较，不会去除重复列
 3. 自身连接：表与自己连接，给表起别名
@@ -20,3 +20,783 @@
     WHERE condition;
 8. 增修删都可以应用子查询
 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL多表查询示例</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            display: flex;
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #f0f2f5;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+        .left-panel {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            max-width: calc(100% - 380px);
+        }
+        .right-panel {
+            width: 380px;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 16px;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            font-size: 13px;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1565c0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1565c0;
+        }
+        h2 {
+            font-size: 15px;
+            color: #0d47a1;
+            margin-bottom: 10px;
+        }
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #1976d2;
+        }
+        .sql-block {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            line-height: 1.8;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .kw  { color: #569cd6; font-weight: bold; }
+        .fn  { color: #dcdcaa; }
+        .str { color: #ce9178; }
+        .num { color: #b5cea8; }
+        .cmt { color: #6a9955; font-style: italic; }
+        .col { color: #9cdcfe; }
+        .explanation {
+            background: #e8f5e9;
+            border-left: 3px solid #43a047;
+            padding: 10px 14px;
+            border-radius: 0 6px 6px 0;
+            margin: 8px 0;
+            line-height: 1.8;
+            color: #2e7d32;
+            font-size: 13px;
+        }
+        .tip-box {
+            background: #fff8e1;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin: 8px 0;
+            line-height: 1.8;
+            font-size: 13px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+        th {
+            background: #1976d2;
+            color: white;
+            padding: 7px 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        tr:nth-child(even) { background-color: #f5f5f5; }
+        tr:hover { background-color: #e3f2fd; }
+        .result-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0 6px;
+            font-size: 13px;
+        }
+        .table-wrapper { margin-bottom: 20px; }
+        .table-name {
+            color: #89b4fa;
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px solid #313244;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 4px 4px 4px 0;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1565c0; }
+        .null-cell { color: #aaa; font-style: italic; }
+        .highlight-row { background-color: #fff9c4 !important; }
+        .highlight-new { background-color: #e8f5e9 !important; }
+        .highlight-del { background-color: #ffebee !important; text-decoration: line-through; color: #aaa; }
+        .sticky-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #cba6f7;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #313244;
+        }
+        .section-group-title {
+            background: linear-gradient(135deg, #1565c0, #0d47a1);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 20px 0 10px;
+        }
+        .flow-box {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 10px 0;
+        }
+        .flow-step {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1565c0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .flow-arrow { color: #90a4ae; font-size: 16px; }
+        code {
+            background: #e8eaf6;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #283593;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        .compare-table th { background: #37474f; color: white; padding: 6px 10px; }
+        .compare-table td { padding: 6px 10px; border: 1px solid #e0e0e0; }
+        .compare-table tr:nth-child(even) { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+
+<!-- 左侧：SQL示例区 -->
+<div class="left-panel">
+    <h1>🔗 SQL多表查询详解与示例</h1>
+
+    <!-- ===== 连接查询 ===== -->
+    <div class="section-group-title">🔗 连接查询（JOIN）</div>
+
+    <!-- 1. 等值连接 两表-->
+    <div class="section">
+        <h2>1️⃣ 等值连接（两表）</h2>
+        <div class="sql-block"><span class="cmt">-- Student 与 SC 按 Sno 等值连接（WHERE写法）</span>
+<span class="kw">SELECT</span> <span class="col">Student</span>.<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">Student</span>, <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Student</span>.<span class="col">Sno</span> = <span class="col">SC</span>.<span class="col">Sno</span>;
+
+<span class="cmt">-- JOIN写法（等价）</span>
+<span class="kw">SELECT</span> <span class="col">Student</span>.<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">JOIN</span> <span class="col">SC</span> <span class="kw">ON</span> <span class="col">Student</span>.<span class="col">Sno</span> = <span class="col">SC</span>.<span class="col">Sno</span>;</div>
+        <div class="explanation">
+            💡 等值连接：连接条件用 <code>=</code>，结果中两表的 <code>Sno</code> 列都会保留（不去重复列）<br>
+            💡 同名列需加表名前缀区分，如 <code>Student.Sno</code>
+        </div>
+        <div class="tip-box">
+            ⚠️ 等值连接 ≠ 自然连接：自然连接自动合并同名列，等值连接保留两个同名列
+        </div>
+        <button onclick="joinTwo()">执行 Student ⋈ SC</button>
+        <div id="joinTwoResult"></div>
+    </div>
+
+    <!-- 2. 三表连接 -->
+    <div class="section">
+        <h2>2️⃣ 三表连接</h2>
+        <div class="sql-block"><span class="cmt">-- Student、SC、Course 三表连接</span>
+<span class="kw">SELECT</span> <span class="col">Student</span>.<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Course</span>.<span class="col">Cno</span>, <span class="col">Cname</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">Student</span>, <span class="col">SC</span>, <span class="col">Course</span>
+<span class="kw">WHERE</span> <span class="col">Student</span>.<span class="col">Sno</span> = <span class="col">SC</span>.<span class="col">Sno</span>
+  <span class="kw">AND</span> <span class="col">SC</span>.<span class="col">Cno</span> = <span class="col">Course</span>.<span class="col">Cno</span>;</div>
+        <div class="explanation">
+            💡 n 张表连接需要 n-1 个连接条件<br>
+            💡 三表连接时，两个条件都不能少，否则产生笛卡尔积
+        </div>
+        <button onclick="joinThree()">执行三表连接</button>
+        <button onclick="joinThreeFilter()">三表连接 + Grade ≥ 90</button>
+        <div id="joinThreeResult"></div>
+    </div>
+
+    <!-- 3. 自身连接 -->
+    <div class="section">
+        <h2>3️⃣ 自身连接（Self Join）</h2>
+        <div class="sql-block"><span class="cmt">-- 查询比"张三"年龄大的所有学生</span>
+<span class="kw">SELECT</span> <span class="col">B</span>.<span class="col">Sname</span>, <span class="col">B</span>.<span class="col">Age</span>
+<span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">AS</span> <span class="col">A</span>, <span class="col">Student</span> <span class="kw">AS</span> <span class="col">B</span>
+<span class="kw">WHERE</span> <span class="col">A</span>.<span class="col">Sname</span> = <span class="str">'张三'</span> <span class="kw">AND</span> <span class="col">B</span>.<span class="col">Age</span> > <span class="col">A</span>.<span class="col">Age</span>;
+
+<span class="cmt">-- 查询同龄的学生对（A.Sno &lt; B.Sno 避免重复）</span>
+<span class="kw">SELECT</span> <span class="col">A</span>.<span class="col">Sname</span>, <span class="col">B</span>.<span class="col">Sname</span>, <span class="col">A</span>.<span class="col">Age</span>
+<span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">AS</span> <span class="col">A</span>, <span class="col">Student</span> <span class="kw">AS</span> <span class="col">B</span>
+<span class="kw">WHERE</span> <span class="col">A</span>.<span class="col">Age</span> = <span class="col">B</span>.<span class="col">Age</span> <span class="kw">AND</span> <span class="col">A</span>.<span class="col">Sno</span> &lt; <span class="col">B</span>.<span class="col">Sno</span>;</div>
+        <div class="explanation">
+            💡 自身连接：同一张表起两个不同别名，把它当成两张独立的表<br>
+            💡 必须用别名（<code>A</code>、<code>B</code>）区分，否则列名引用会报错
+        </div>
+        <button onclick="selfJoinOlder()">比张三年龄大的学生</button>
+        <button onclick="selfJoinSameAge()">同龄学生对</button>
+        <div id="selfJoinResult"></div>
+    </div>
+
+    <!-- 4. 外连接 -->
+    <div class="section">
+        <h2>4️⃣ 外连接（LEFT JOIN）</h2>
+        <div class="sql-block"><span class="cmt">-- 查询所有学生及其选课（没选课的学生也显示）</span>
+<span class="kw">SELECT</span> <span class="col">Student</span>.<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">LEFT JOIN</span> <span class="col">SC</span> <span class="kw">ON</span> <span class="col">Student</span>.<span class="col">Sno</span> = <span class="col">SC</span>.<span class="col">Sno</span>;</div>
+        <div class="explanation">
+            💡 <code>LEFT JOIN</code>：左表全部保留，右表无匹配则填 NULL<br>
+            💡 内连接（JOIN）只保留两表都有的行；左外连接保留左表所有行
+        </div>
+        <button onclick="leftJoin()">LEFT JOIN（含未选课学生）</button>
+        <button onclick="innerJoin()">INNER JOIN（对比）</button>
+        <div id="outerJoinResult"></div>
+    </div>
+
+    <!-- ===== 子查询 ===== -->
+    <div class="section-group-title">🔍 子查询（SubQuery）</div>
+
+    <!-- 5. 不相关子查询 -->
+    <div class="section">
+        <h2>5️⃣ 不相关子查询（由内向外执行）</h2>
+        <div class="sql-block"><span class="cmt">-- 查询选了"数据库"课程的学生姓名</span>
+<span class="cmt">-- 第①步（内层）：找到"数据库"的课程号</span>
+<span class="cmt">-- 第②步（外层）：在SC中找选了该课的Sno，再查Student</span>
+<span class="kw">SELECT</span> <span class="col">Sname</span>
+<span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> <span class="col">Sno</span>
+    <span class="kw">FROM</span> <span class="col">SC</span>
+    <span class="kw">WHERE</span> <span class="col">Cno</span> <span class="kw">IN</span> (
+        <span class="kw">SELECT</span> <span class="col">Cno</span>
+        <span class="kw">FROM</span> <span class="col">Course</span>
+        <span class="kw">WHERE</span> <span class="col">Cname</span> = <span class="str">'数据库'</span>
+    )
+);</div>
+        <div class="explanation">
+            💡 不相关子查询：子查询独立执行，不引用外层表的列，<strong>由内向外</strong>逐层执行<br>
+            ⚠️ 子查询中<strong>不能使用 ORDER BY</strong>（ORDER BY 只能用于最终结果）
+        </div>
+        <div class="flow-box">
+            <div class="flow-step">① 内层：找"数据库"的Cno</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">② 中层：在SC中找对应Sno</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">③ 外层：查Student姓名</div>
+        </div>
+        <button onclick="uncorrSubquery1()">查选了"数据库"的学生</button>
+        <button onclick="uncorrSubquery2()">查成绩高于平均分的选课</button>
+        <div id="uncorrResult"></div>
+    </div>
+
+    <!-- 6. ANY / ALL -->
+    <div class="section">
+        <h2>6️⃣ ANY 与 ALL</h2>
+        <div class="sql-block"><span class="cmt">-- ANY：C01成绩大于C02课程中任意一个成绩（即大于最小值）</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Cno</span> = <span class="str">'C01'</span>
+  <span class="kw">AND</span> <span class="col">Grade</span> > <span class="kw">ANY</span> (
+    <span class="kw">SELECT</span> <span class="col">Grade</span> <span class="kw">FROM</span> <span class="col">SC</span> <span class="kw">WHERE</span> <span class="col">Cno</span> = <span class="str">'C02'</span>
+);
+
+<span class="cmt">-- ALL：C01成绩大于C02课程中所有成绩（即大于最大值）</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Grade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Cno</span> = <span class="str">'C01'</span>
+  <span class="kw">AND</span> <span class="col">Grade</span> > <span class="kw">ALL</span> (
+    <span class="kw">SELECT</span> <span class="col">Grade</span> <span class="kw">FROM</span> <span class="col">SC</span> <span class="kw">WHERE</span> <span class="col">Cno</span> = <span class="str">'C02'</span>
+);</div>
+        <div class="explanation">
+            💡 <code>ANY</code>：与子查询结果中<strong>任意一个</strong>满足条件即可（等价于 <code>&gt; MIN(子查询)</code>）<br>
+            💡 <code>ALL</code>：与子查询结果中<strong>所有值</strong>都满足条件（等价于 <code>&gt; MAX(子查询)</code>）
+        </div>
+        <table class="compare-table">
+            <tr><th>写法</th><th>等价写法</th><th>含义</th></tr>
+            <tr><td><code>&gt; ANY (子查询)</code></td><td><code>&gt; MIN(子查询)</code></td><td>大于子查询最小值</td></tr>
+            <tr><td><code>&gt; ALL (子查询)</code></td><td><code>&gt; MAX(子查询)</code></td><td>大于子查询最大值</td></tr>
+            <tr><td><code>= ANY (子查询)</code></td><td><code>IN (子查询)</code></td><td>等于子查询任意值</td></tr>
+            <tr><td><code>!= ALL (子查询)</code></td><td><code>NOT IN (子查询)</code></td><td>不等于子查询全部值</td></tr>
+        </table>
+        <button onclick="queryAny()">C01成绩 &gt; ANY (C02成绩)</button>
+        <button onclick="queryAll()">C01成绩 &gt; ALL (C02成绩)</button>
+        <div id="anyAllResult"></div>
+    </div>
+
+    <!-- 7. 相关子查询 EXISTS -->
+    <div class="section">
+        <h2>7️⃣ 相关子查询（EXISTS）</h2>
+        <div class="sql-block"><span class="cmt">-- 查询选了"C01"课程的学生姓名（EXISTS写法）</span>
+<span class="kw">SELECT</span> <span class="col">Sname</span>
+<span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="kw">EXISTS</span> (
+    <span class="kw">SELECT</span> *
+    <span class="kw">FROM</span> <span class="col">SC</span>
+    <span class="kw">WHERE</span> <span class="col">SC</span>.<span class="col">Sno</span> = <span class="col">Student</span>.<span class="col">Sno</span>   <span class="cmt">-- 引用外层 Student</span>
+      <span class="kw">AND</span> <span class="col">Cno</span> = <span class="str">'C01'</span>
+);
+
+<span class="cmt">-- NOT EXISTS：没有选"C01"的学生</span>
+<span class="kw">SELECT</span> <span class="col">Sname</span>
+<span class="kw">FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="kw">NOT EXISTS</span> (
+    <span class="kw">SELECT</span> *
+    <span class="kw">FROM</span> <span class="col">SC</span>
+    <span class="kw">WHERE</span> <span class="col">SC</span>.<span class="col">Sno</span> = <span class="col">Student</span>.<span class="col">Sno</span>
+      <span class="kw">AND</span> <span class="col">Cno</span> = <span class="str">'C01'</span>
+);</div>
+        <div class="explanation">
+            💡 相关子查询：子查询引用了外层查询的表（<code>Student.Sno</code>），随外层<strong>逐行执行</strong><br>
+            💡 <code>EXISTS</code> 只关心子查询是否返回行（有/无），不关心具体值<br>
+            💡 执行顺序：<strong>外层取一行 → 代入内层执行 → 根据EXISTS结果决定保留</strong>
+        </div>
+        <div class="flow-box">
+            <div class="flow-step">外层取Student第1行</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">代入子查询执行</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">有结果则保留该行</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">继续下一行...</div>
+        </div>
+        <button onclick="existsQuery()">EXISTS：选了C01的学生</button>
+        <button onclick="notExistsQuery()">NOT EXISTS：没选C01的学生</button>
+        <div id="existsResult"></div>
+    </div>
+
+    <!-- ===== 增修删 ===== -->
+    <div class="section-group-title">✏️ 增 / 修 / 删（DML）及子查询应用</div>
+
+    <!-- 8. INSERT -->
+    <div class="section">
+        <h2>8️⃣ 插入数据 — INSERT</h2>
+        <div class="sql-block"><span class="cmt">-- 基本插入（指定列）</span>
+<span class="kw">INSERT INTO</span> <span class="col">Student</span> (<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Age</span>, <span class="col">Sex</span>)
+<span class="kw">VALUES</span> (<span class="str">'S06'</span>, <span class="str">'吴九'</span>, <span class="num">20</span>, <span class="str">'女'</span>);
+
+<span class="cmt">-- 省略列名（VALUES顺序须与表结构一致）</span>
+<span class="kw">INSERT INTO</span> <span class="col">Student</span>
+<span class="kw">VALUES</span> (<span class="str">'S07'</span>, <span class="str">'郑十'</span>, <span class="num">21</span>, <span class="str">'男'</span>);
+
+<span class="cmt">-- 子查询批量插入（SELECT结果插入另一表）</span>
+<span class="cmt">-- 注意：SELECT列数、类型须与INSERT目标列匹配</span>
+<span class="kw">INSERT INTO</span> <span class="col">GoodStudent</span> (<span class="col">Sno</span>, <span class="col">Sname</span>)
+<span class="kw">SELECT</span> <span class="col">Student</span>.<span class="col">Sno</span>, <span class="col">Sname</span>
+<span class="kw">FROM</span> <span class="col">Student</span>, <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Student</span>.<span class="col">Sno</span> = <span class="col">SC</span>.<span class="col">Sno</span>
+  <span class="kw">AND</span> <span class="col">Grade</span> >= <span class="num">90</span>;</div>
+        <div class="explanation">
+            💡 <code>INSERT INTO 表名 (列名...) VALUES (值...)</code> — 指定列插入<br>
+            💡 省略列名时，VALUES 的顺序和数量必须与建表时的列顺序完全一致<br>
+            💡 子查询插入：<code>SELECT</code> 的<strong>列数</strong>和<strong>类型</strong>必须与目标列一一匹配
+        </div>
+        <button onclick="showInsert1()">INSERT 单行（指定列）</button>
+        <button onclick="showInsertSubquery()">子查询批量插入（Grade≥90）</button>
+        <div id="insertResult"></div>
+    </div>
+
+    <!-- 9. UPDATE -->
+    <div class="section">
+        <h2>9️⃣ 修改数据 — UPDATE</h2>
+        <div class="sql-block"><span class="cmt">-- 基本修改（指定WHERE条件）</span>
+<span class="kw">UPDATE</span> <span class="col">Student</span>
+<span class="kw">SET</span> <span class="col">Age</span> = <span class="num">22</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> = <span class="str">'S01'</span>;
+
+<span class="cmt">-- 省略WHERE（修改所有行，慎用！）</span>
+<span class="kw">UPDATE</span> <span class="col">SC</span>
+<span class="kw">SET</span> <span class="col">Grade</span> = <span class="col">Grade</span> * <span class="num">1.1</span>;
+
+<span class="cmt">-- 利用子查询修改：将选了"C01"的学生年龄+1</span>
+<span class="kw">UPDATE</span> <span class="col">Student</span>
+<span class="kw">SET</span> <span class="col">Age</span> = <span class="col">Age</span> + <span class="num">1</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> <span class="col">Sno</span> <span class="kw">FROM</span> <span class="col">SC</span>
+    <span class="kw">WHERE</span> <span class="col">Cno</span> = <span class="str">'C01'</span>
+);</div>
+        <div class="explanation">
+            💡 <code>WHERE</code> 可省略，省略则修改该表<strong>所有行</strong>（危险操作，需谨慎）<br>
+            💡 <code>SET</code> 可同时修改多列：<code>SET col1=v1, col2=v2</code><br>
+            💡 子查询可用在 WHERE 中，批量更新满足子查询条件的行
+        </div>
+        <button onclick="showUpdate1()">UPDATE 单行</button>
+        <button onclick="showUpdateAll()">UPDATE 无WHERE（所有成绩×1.1）</button>
+        <button onclick="showUpdateSubquery()">子查询UPDATE（选了C01的学生Age+1）</button>
+        <div id="updateResult"></div>
+    </div>
+
+    <!-- 10. DELETE -->
+    <div class="section">
+        <h2>🔟 删除数据 — DELETE</h2>
+        <div class="sql-block"><span class="cmt">-- 基本删除（指定条件）</span>
+<span class="kw">DELETE FROM</span> <span class="col">Student</span>
+<span class="kw">WHERE</span> <span class="col">Sno</span> = <span class="str">'S05'</span>;
+
+<span class="cmt">-- 省略WHERE（清空表，但保留表结构）</span>
+<span class="kw">DELETE FROM</span> <span class="col">SC</span>;
+
+<span class="cmt">-- 利用子查询删除：删除男生中Grade &lt; 80的选课记录</span>
+<span class="kw">DELETE FROM</span> <span class="col">SC</span>
+<span class="kw">WHERE</span> <span class="col">Grade</span> &lt; <span class="num">80</span>
+  <span class="kw">AND</span> <span class="col">Sno</span> <span class="kw">IN</span> (
+    <span class="kw">SELECT</span> <span class="col">Sno</span> <span class="kw">FROM</span> <span class="col">Student</span>
+    <span class="kw">WHERE</span> <span class="col">Sex</span> = <span class="str">'男'</span>
+);</div>
+        <div class="explanation">
+            💡 <code>WHERE</code> 可省略，省略则删除表中<strong>所有行</strong>（表结构保留，数据清空）<br>
+            💡 与 <code>DROP TABLE</code> 的区别：DELETE 只删数据，表还在；DROP 连表结构一起删<br>
+            💡 子查询 DELETE：先在子查询中确定要删的行，再整体执行
+        </div>
+        <div class="tip-box">
+            📌 DELETE vs TRUNCATE vs DROP：<br>
+            &nbsp;&nbsp;<strong>DELETE</strong>：逐行删，可加 WHERE，可回滚<br>
+            &nbsp;&nbsp;<strong>TRUNCATE</strong>：快速清空整表，不可回滚<br>
+            &nbsp;&nbsp;<strong>DROP TABLE</strong>：连表结构一起删除
+        </div>
+        <button onclick="showDelete1()">DELETE 单行（S05）</button>
+        <button onclick="showDeleteSubquery()">子查询DELETE（男生中Grade&lt;80的选课）</button>
+        <div id="deleteResult"></div>
+    </div>
+
+    <!-- 11. 总结对比 -->
+    <div class="section-group-title">📋 知识点总结</div>
+    <div class="section">
+        <h2>1️⃣1️⃣ 连接方式对比</h2>
+        <table class="compare-table">
+            <tr><th>连接类型</th><th>关键词</th><th>特点</th><th>结果行数</th></tr>
+            <tr><td>等值连接（内连接）</td><td>JOIN ON / WHERE =</td><td>只保留两表都有的行</td><td>≤ 各表行数</td></tr>
+            <tr><td>自身连接</td><td>同表两别名</td><td>表自己和自己连接</td><td>视条件而定</td></tr>
+            <tr><td>左外连接</td><td>LEFT JOIN</td><td>左表全保留，右表无匹配填NULL</td><td>≥ 左表行数</td></tr>
+            <tr><td>笛卡尔积</td><td>无连接条件</td><td>所有行的全组合（一般要避免）</td><td>m × n 行</td></tr>
+        </table>
+
+        <h2 style="margin-top:16px">1️⃣2️⃣ 子查询对比</h2>
+        <table class="compare-table">
+            <tr><th>类型</th><th>特点</th><th>执行方式</th><th>常用关键字</th></tr>
+            <tr><td>不相关子查询</td><td>子查询不引用外层列</td><td>由内向外，只执行一次</td><td>IN / NOT IN / = / ANY / ALL</td></tr>
+            <tr><td>相关子查询</td><td>子查询引用外层列</td><td>外层每行都触发一次子查询</td><td>EXISTS / NOT EXISTS</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- 右侧：基础数据表 -->
+<div class="right-panel">
+    <div class="sticky-title">📊 基础数据表（参考）</div>
+    <div class="table-wrapper">
+        <div class="table-name">👤 Student（学生表）</div>
+        <table id="studentTable"></table>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">📚 Course（课程表）</div>
+        <table id="courseTable"></table>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">📋 SC（选课表）</div>
+        <table id="scTable"></table>
+    </div>
+</div>
+
+<script>
+// ===================== 基础数据 =====================
+const students = [
+    {Sno:'S01', Sname:'张三', Age:19, Sex:'男'},
+    {Sno:'S02', Sname:'李四', Age:20, Sex:'女'},
+    {Sno:'S03', Sname:'王五', Age:22, Sex:'男'},
+    {Sno:'S04', Sname:'赵六', Age:21, Sex:'女'},
+    {Sno:'S05', Sname:'孙七', Age:19, Sex:'男'},
+];
+const courses = [
+    {Cno:'C01', Cname:'数据库',   Credit:4},
+    {Cno:'C02', Cname:'数据结构', Credit:3},
+    {Cno:'C03', Cname:'操作系统', Credit:4},
+];
+const sc = [
+    {Sno:'S01', Cno:'C01', Grade:85},
+    {Sno:'S01', Cno:'C02', Grade:90},
+    {Sno:'S02', Cno:'C01', Grade:88},
+    {Sno:'S02', Cno:'C02', Grade:92},
+    {Sno:'S02', Cno:'C03', Grade:87},
+    {Sno:'S03', Cno:'C01', Grade:78},
+    {Sno:'S04', Cno:'C02', Grade:95},
+    {Sno:'S05', Cno:'C01', Grade:null},
+];
+
+// ===================== 渲染工具 =====================
+function renderTable(data, elementId, highlightFn) {
+    const el = document.getElementById(elementId);
+    if (!data || data.length === 0) {
+        el.innerHTML = '<tr><td colspan="99" style="color:#aaa;text-align:center">（空结果）</td></tr>';
+        return;
+    }
+    const keys = Object.keys(data[0]);
+    let html = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+    data.forEach((row, i) => {
+        const cls = highlightFn ? highlightFn(row, i) : '';
+        html += `<tr class="${cls}">` + keys.map(k => {
+            const v = row[k];
+            return v === null ? `<td class="null-cell">NULL</td>` : `<td>${v}</td>`;
+        }).join('') + '</tr>';
+    });
+    el.innerHTML = html;
+}
+
+function renderResult(containerId, data, title, highlightFn) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = `<div class="result-title">📊 ${title}</div><table id="${containerId}_t"></table>`;
+    renderTable(data, `${containerId}_t`, highlightFn);
+}
+
+// 初始化右侧基础表
+renderTable(students, 'studentTable');
+renderTable(courses,  'courseTable');
+renderTable(sc,       'scTable');
+
+// ===================== 连接查询 =====================
+function joinTwo() {
+    const r = [];
+    sc.forEach(s => {
+        const stu = students.find(x => x.Sno === s.Sno);
+        if (stu) r.push({'Student.Sno': stu.Sno, Sname: stu.Sname, Cno: s.Cno, Grade: s.Grade});
+    });
+    renderResult('joinTwoResult', r, 'SELECT Student.Sno,Sname,Cno,Grade FROM Student,SC WHERE Student.Sno=SC.Sno');
+}
+
+function joinThree() {
+    const r = [];
+    sc.forEach(s => {
+        const stu = students.find(x => x.Sno === s.Sno);
+        const crs = courses.find(x => x.Cno === s.Cno);
+        if (stu && crs) r.push({'Student.Sno': stu.Sno, Sname: stu.Sname, 'Course.Cno': crs.Cno, Cname: crs.Cname, Grade: s.Grade});
+    });
+    renderResult('joinThreeResult', r, '三表连接（Student ⋈ SC ⋈ Course）');
+}
+
+function joinThreeFilter() {
+    const r = [];
+    sc.forEach(s => {
+        if (s.Grade >= 90) {
+            const stu = students.find(x => x.Sno === s.Sno);
+            const crs = courses.find(x => x.Cno === s.Cno);
+            if (stu && crs) r.push({'Student.Sno': stu.Sno, Sname: stu.Sname, 'Course.Cno': crs.Cno, Cname: crs.Cname, Grade: s.Grade});
+        }
+    });
+    renderResult('joinThreeResult', r, '三表连接 + WHERE Grade ≥ 90');
+}
+
+function selfJoinOlder() {
+    const zhangsan = students.find(s => s.Sname === '张三');
+    const r = students.filter(s => s.Age > zhangsan.Age).map(s => ({Sname: s.Sname, Age: s.Age}));
+    const c = document.getElementById('selfJoinResult');
+    c.innerHTML = `
+        <div class="result-title">📊 张三（A）Age=${zhangsan.Age} → 查 B.Age &gt; ${zhangsan.Age} 的学生：</div>
+        <table id="selfJoinResult_t"></table>`;
+    renderTable(r, 'selfJoinResult_t');
+}
+
+function selfJoinSameAge() {
+    const r = [];
+    students.forEach(a => {
+        students.forEach(b => {
+            if (a.Age === b.Age && a.Sno < b.Sno) {
+                r.push({'A.Sname': a.Sname, 'B.Sname': b.Sname, Age: a.Age});
+            }
+        });
+    });
+    renderResult('selfJoinResult', r, '自身连接：同龄学生对（A.Sno < B.Sno 避免重复）');
+}
+
+function leftJoin() {
+    const r = students.map(stu => {
+        const scRows = sc.filter(s => s.Sno === stu.Sno);
+        if (scRows.length === 0) return [{'Student.Sno': stu.Sno, Sname: stu.Sname, Cno: null, Grade: null}];
+        return scRows.map(s => ({'Student.Sno': stu.Sno, Sname: stu.Sname, Cno: s.Cno, Grade: s.Grade}));
+    }).flat();
+    renderResult('outerJoinResult', r, 'LEFT JOIN：所有学生（无选课记录的Cno/Grade显示NULL）');
+}
+
+function innerJoin() {
+    const r = sc.map(s => {
+        const stu = students.find(x => x.Sno === s.Sno);
+        return {'Student.Sno': stu.Sno, Sname: stu.Sname, Cno: s.Cno, Grade: s.Grade};
+    });
+    renderResult('outerJoinResult', r, 'INNER JOIN：只有在SC中有记录的学生');
+}
+
+// ===================== 子查询 =====================
+function uncorrSubquery1() {
+    const c01 = courses.find(c => c.Cname === '数据库');
+    const snos = [...new Set(sc.filter(s => s.Cno === c01.Cno).map(s => s.Sno))];
+    const r = students.filter(s => snos.includes(s.Sno)).map(s => ({Sname: s.Sname}));
+    const c = document.getElementById('uncorrResult');
+    c.innerHTML = `
+        <div class="result-title">① 内层：Course WHERE Cname='数据库' → Cno = '${c01.Cno}'</div>
+        <div class="result-title">② 中层：SC WHERE Cno='${c01.Cno}' → Sno: [${snos.join(', ')}]</div>
+        <div class="result-title">③ 外层查询结果：</div>
+        <table id="uncorrResult_t"></table>`;
+    renderTable(r, 'uncorrResult_t');
+}
+
+function uncorrSubquery2() {
+    const grades = sc.filter(s => s.Grade !== null).map(s => s.Grade);
+    const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
+    const r = sc.filter(s => s.Grade !== null && s.Grade > avg).map(s => ({
+        Sno: s.Sno, Cno: s.Cno, Grade: s.Grade,
+        '高于均值?': `✅ (均值=${avg.toFixed(1)})`
+    }));
+    renderResult('uncorrResult', r, `WHERE Grade > (SELECT AVG(Grade) FROM SC) → 均值=${avg.toFixed(1)}`);
+}
+
+function queryAny() {
+    const c02Grades = sc.filter(s => s.Cno === 'C02' && s.Grade !== null).map(s => s.Grade);
+    const minC02 = Math.min(...c02Grades);
+    const r = sc.filter(s => s.Cno === 'C01' && s.Grade !== null && s.Grade > minC02).map(s => ({
+        Sno: s.Sno, Cno: s.Cno, Grade: s.Grade,
+        说明: `> ANY 即 > MIN(${minC02})`
+    }));
+    renderResult('anyAllResult', r, `C01.Grade > ANY(C02成绩[${c02Grades.join(',')}]) ← MIN=${minC02}`);
+}
+
+function queryAll() {
+    const c02Grades = sc.filter(s => s.Cno === 'C02' && s.Grade !== null).map(s => s.Grade);
+    const maxC02 = Math.max(...c02Grades);
+    const r = sc.filter(s => s.Cno === 'C01' && s.Grade !== null && s.Grade > maxC02).map(s => ({
+        Sno: s.Sno, Cno: s.Cno, Grade: s.Grade,
+        说明: `> ALL 即 > MAX(${maxC02})`
+    }));
+    if (r.length === 0) {
+        renderResult('anyAllResult', [{提示: `C02最大值=${maxC02}，C01中无成绩超过它 → 空结果`}],
+            `C01.Grade > ALL(C02成绩[${c02Grades.join(',')}]) ← MAX=${maxC02}，无满足行`);
+    } else {
+        renderResult('anyAllResult', r, `C01.Grade > ALL(C02成绩) ← MAX=${maxC02}`);
+    }
+}
+
+function existsQuery() {
+    const r = students.filter(stu =>
+        sc.some(s => s.Sno === stu.Sno && s.Cno === 'C01')
+    ).map(s => ({Sname: s.Sname}));
+    renderResult('existsResult', r, 'EXISTS（相关子查询）：选了C01课程的学生');
+}
+
+function notExistsQuery() {
+    const r = students.filter(stu =>
+        !sc.some(s => s.Sno === stu.Sno && s.Cno === 'C01')
+    ).map(s => ({Sname: s.Sname}));
+    renderResult('existsResult', r, 'NOT EXISTS：没有选C01课程的学生');
+}
+
+// ===================== INSERT =====================
+function showInsert1() {
+    const newRow = {Sno:'S06', Sname:'吴九', Age:20, Sex:'女'};
+    const r = [...students, newRow];
+    const c = document.getElementById('insertResult');
+    c.innerHTML = `<div class="result-title">📊 INSERT 后 Student 表（新增行高亮），共 ${r.length} 行</div><table id="insertT"></table>`;
+    renderTable(r, 'insertT', (row) => row.Sno === 'S06' ? 'highlight-new' : '');
+}
+
+function showInsertSubquery() {
+    const goodSnos = [...new Set(sc.filter(s => s.Grade >= 90).map(s => s.Sno))];
+    const goodStudents = students.filter(s => goodSnos.includes(s.Sno)).map(s => ({Sno: s.Sno, Sname: s.Sname}));
+    const c = document.getElementById('insertResult');
+    c.innerHTML = `
+        <div class="result-title">📊 子查询结果（Grade≥90 的学生）→ 将插入 GoodStudent 表：</div>
+        <table id="insertSubT"></table>`;
+    renderTable(goodStudents, 'insertSubT');
+}
+
+// ===================== UPDATE =====================
+function showUpdate1() {
+    const r = students.map(s => s.Sno === 'S01' ? {...s, Age: 22} : {...s});
+    const c = document.getElementById('updateResult');
+    c.innerHTML = `<div class="result-title">📊 UPDATE Student SET Age=22 WHERE Sno='S01'（高亮修改行）</div><table id="updateT"></table>`;
+    renderTable(r, 'updateT', (row) => row.Sno === 'S01' ? 'highlight-row' : '');
+}
+
+function showUpdateAll() {
+    const r = sc.map(s => s.Grade !== null ? {...s, Grade: Math.round(s.Grade * 1.1)} : {...s});
+    const c = document.getElementById('updateResult');
+    c.innerHTML = `<div class="result-title">📊 UPDATE SC SET Grade=Grade*1.1（无WHERE，所有行均修改，高亮）</div><table id="updateT"></table>`;
+    renderTable(r, 'updateT', (row) => row.Grade !== null ? 'highlight-row' : '');
+}
+
+function showUpdateSubquery() {
+    const snos = [...new Set(sc.filter(s => s.Cno === 'C01').map(s => s.Sno))];
+    const r = students.map(s => snos.includes(s.Sno) ? {...s, Age: s.Age + 1} : {...s});
+    const c = document.getElementById('updateResult');
+    c.innerHTML = `
+        <div class="result-title">📊 子查询：选了C01的Sno=[${snos.join(',')}] → Age+1（高亮）</div>
+        <table id="updateSubT"></table>`;
+    renderTable(r, 'updateSubT', (row) => snos.includes(row.Sno) ? 'highlight-row' : '');
+}
+
+// ===================== DELETE =====================
+function showDelete1() {
+    const r = students.filter(s => s.Sno !== 'S05');
+    const c = document.getElementById('deleteResult');
+    c.innerHTML = `<div class="result-title">📊 DELETE FROM Student WHERE Sno='S05' 后（孙七已删除，共 ${r.length} 行）</div><table id="deleteT"></table>`;
+    renderTable(r, 'deleteT');
+}
+
+function showDeleteSubquery() {
+    const maleSnos = students.filter(s => s.Sex === '男').map(s => s.Sno);
+    const r = sc.map(s => ({...s, _del: s.Grade !== null && s.Grade < 80 && maleSnos.includes(s.Sno)}));
+    const c = document.getElementById('deleteResult');
+    c.innerHTML = `
+        <div class="result-title">📊 子查询DELETE：男生中Grade&lt;80的选课行（划线=删除，保留其余行）</div>
+        <table id="deleteSubT"></table>`;
+    const el = document.getElementById('deleteSubT');
+    let html = '<tr><th>Sno</th><th>Cno</th><th>Grade</th><th>状态</th></tr>';
+    r.forEach(row => {
+        const cls = row._del ? 'highlight-del' : '';
+        html += `<tr class="${cls}"><td>${row.Sno}</td><td>${row.Cno}</td><td>${row.Grade ?? 'NULL'}</td><td>${row._del ? '❌ 删除' : '✅ 保留'}</td></tr>`;
+    });
+    el.innerHTML = html;
+}
+</script>
+</body>
+</html>
