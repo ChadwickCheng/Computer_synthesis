@@ -1,0 +1,22 @@
+<!-- 
+1. 连接查询：一个查询涉及多张表
+2. 等值连接：连接条件是等值比较，不会去除重复列
+3. 自身连接：表与自己连接，给表起别名
+4. 子查询：where子句嵌套查询；可以使用ANY，ALL
+    不相关子查询：子查询不依赖父查询，由内向外；子查询不可使用ORDERBY
+    相关子查询：子查询依赖外部查询
+5. 增：
+    INSERT
+    INTO table_name (column1, column2, column3, ...)
+    VALUES (value1, value2, value3, ...); // values全可以省略INTO的内容
+    应用子查询需要SELECT和INTO匹配：值个数，值类型
+6. 修改：
+    UPDATE table_name
+    SET column1 = value1, column2 = value2, ...
+    WHERE condition; // where子句可省略，省略则修改所有行
+7. 删：
+    DELETE
+    FROM table_name
+    WHERE condition;
+8. 增修删都可以应用子查询
+-->
