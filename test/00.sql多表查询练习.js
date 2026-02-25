@@ -14,7 +14,12 @@
 要求用 WHERE 子句写法和 JOIN 写法都写出来
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Student.Sno, Sname, Cno, Grade
+FROM Student, SC
+WHERE Student.Sno = SC.Sno
+*/
 
 
 /*
@@ -22,7 +27,12 @@
 查询显示所有学生的选课详细信息，要求显示：学号、学生姓名、课程号、课程名、成绩
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Student.Sno, Sname, Course.Cno, Cname, Grade
+FROM Student, SC，Course
+WHERE Student.Sno = SC.Sno AND SC.Cno = Course.Cno
+*/
 
 
 /*
@@ -30,7 +40,12 @@
 在题2的基础上，再加条件：只显示成绩 ≥ 90 的选课信息
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Student.Sno, Sname, Course.Cno, Cname, Grade
+FROM Student, Course, SC
+WHERE Student.Sno = SC.Sno AND SC.Cno = Course.Cno AND Grade >= 90
+*/
 
 
 /*
@@ -39,7 +54,12 @@
 提示：表与自己连接，需要起别名
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Sec.Sname, Sec.Age
+FROM Student AS Fir, Student AS Sec
+WHERE Fir.Sname = '张三' AND Sec.Age > Fir.Age
+*/
 
 
 /*
@@ -48,7 +68,12 @@
 提示：用 A.Sno < B.Sno 避免重复
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT A.Sname, B.Sname, Age
+FROM Student AS A, Student AS B
+WHERE A.Age = B.Age AND A.Sno < B.Sno
+*/
 
 
 /*
@@ -57,7 +82,9 @@
 显示：学号、学生姓名、课程号、成绩
 */
 // 你的答案：
-// SELECT ...
+/*
+
+*/
 
 
 /*
@@ -77,7 +104,20 @@
 提示：先在Course表找"数据库"的Cno，再在SC表找对应的Sno，最后在Student表查姓名
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Sname
+FROM Student
+WHERE Student.Sno IN (
+    SELECT SC.Sno
+    FROM SC
+    WHERE SC.Cno IN (
+        SELECT Course.Cno
+        FROM Course
+        WHERE Cname = '数据库'
+    )
+)
+*/
 
 
 /*
@@ -85,7 +125,20 @@
 查询选了"数据库"课程的学生人数
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Count(*)
+FROM Student
+WHERE Student.Sno IN (
+    SELECT SC.Sno
+    FROM SC
+    WHERE SC.Cno IN (
+        SELECT Course.Cno
+        FROM Course
+        WHERE Cname = '数据库'
+    )
+)
+*/
 
 
 /*
@@ -93,7 +146,15 @@
 查询所有成绩高于平均分的选课记录，显示：学号、课程号、成绩
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Sno, Cno, Grade
+FROM SC
+WHERE Grade > (
+    SELECT AVG(Grade)
+    FROM SC
+)
+*/
 
 
 /*
@@ -102,7 +163,16 @@
 （提示：> ANY(子查询) 等价于 > MIN(子查询)）
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT SC.Sno, SC.Grade
+FROM SC
+WHERE SC.Cno = 'C01' AND SC.Grade > ANY (
+    SELECT Grade
+    FROM SC
+    WHERE SC.Cno = 'C02'
+)
+*/
 
 
 /*
@@ -111,7 +181,15 @@
 （提示：> ALL(子查询) 等价于 > MAX(子查询)）
 */
 // 你的答案：
-// SELECT ...
+/*
+SELECT SC.Sno, SC.Grade
+FROM SC
+WHERE SC.Cno = 'C01' AND SC.Grade > ALL (
+    SELECT Grade
+    FROM SC
+    WHERE SC.Cno = 'C02'
+)
+*/
 
 
 /*
@@ -138,7 +216,11 @@
 （指定列的写法）
 */
 // 你的答案：
-// INSERT ...
+/*
+INSERT
+INTO Student(Sno, Sname, Age, Sex)
+VALUES ('S06', '赵亚琴', 20, '女')
+*/
 
 
 /*
@@ -147,7 +229,11 @@
 （VALUES必须与表结构的列顺序一致）
 */
 // 你的答案：
-// INSERT ...
+/*
+INSERT
+INTO Student
+Values ('S07', '邱清泉', 21, '男')
+*/
 
 
 /*
@@ -156,7 +242,13 @@
 注意：SELECT的列数和类型要与INSERT目标列匹配
 */
 // 你的答案：
-// INSERT ...
+/*
+答：
+INSERT INTO GoodStudent(Sno, Sname)
+SELECT DISTINCT Student.Sno, Student.Sname
+FROM Student, SC
+WHERE Student.Sno = SC.Sno AND SC.Grade >= 90
+*/
 
 
 /*
@@ -164,7 +256,12 @@
 修改学号为'S01'的学生年龄为22
 */
 // 你的答案：
-// UPDATE ...
+/*
+答：
+UPDATE Student
+SET Age = 22
+WHERE Sno = 'S01'
+*/
 
 
 /*
@@ -173,7 +270,11 @@
 （警告：省略WHERE会修改整个表！）
 */
 // 你的答案：
-// UPDATE ...
+/*
+答：
+UPDATE SC
+SET Grade = Grade * 1.1
+*/
 
 
 /*
@@ -181,7 +282,16 @@
 将所有选了"C01"课程的学生年龄+1
 */
 // 你的答案：
-// UPDATE ...
+/*
+答：
+UPDATE Student
+Set Age = Age + 1
+WHERE Sno IN (
+    SELECT Sno
+    FROM SC
+    WHERE SC.Cno = 'C01'
+)
+*/
 
 
 /*
@@ -189,7 +299,12 @@
 删除学号为'S05'的学生记录
 */
 // 你的答案：
-// DELETE ...
+/*
+答：
+DELETE
+FROM Student
+WHERE Sno = 'S05'
+*/
 
 
 /*
@@ -197,7 +312,24 @@
 删除所有男生中成绩<80的选课记录
 */
 // 你的答案：
-// DELETE ...
+/*
+答：
+DELETE
+FROM Student
+WHERE Sno IN (
+    SELECT SNO
+    FROM SC
+    WHERE Grade < 80
+) AND Sex = '男'
+
+DELETE
+FROM SC
+WHERE Grade < 80 AND Sno IN (
+    SELECT Sno
+    From Student
+    WHERE Sex = '男'
+)
+*/
 
 
 // ============ 第四部分：综合题 ============
@@ -207,7 +339,20 @@
 统计每位学生的平均成绩，显示：学号、学生姓名、平均成绩
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Student.Sno, Student.Sname, AvgG
+From Student,
+(SELECT Sno, AVG(Grade) AS AvgG
+FROM SC
+GROUP BY Sno) AS AvgGrade
+WHERE Student.Sno = AvgGrade.Sno
+
+SELECT Student.Sno, Student.Sname, AVG(SC.Grade)
+FROM Student, SC
+WHERE Student.Sno = SC.Sno
+Group BY Student.Sno
+*/
 
 
 /*
@@ -215,7 +360,22 @@
 查询选课数最多的学生姓名和选课数
 */
 // 你的答案：
-// SELECT ...
+/*
+答：
+SELECT Student.Sname, COUNT(SC.Cno) AS CourseCnt
+FROM Student, SC
+WHERE Student.Sno = SC.Sno
+GROUP BY Student.Sno, Student.Sname
+HAVING COUNT(SC.Cno) = (
+    SELECT MAX(CourseCnt)
+    FROM (
+        SELECT COUNT(SC.Cno) AS CourseCnt
+        FROM Student, SC
+        WHERE Student.Sno = SC.Sno
+        GROUP BY Student.Sno
+    ) AS T
+)
+*/
 
 
 /*
@@ -223,7 +383,13 @@
 查询选了超过2门课程的学生的姓名
 */
 // 你的答案：
-// SELECT ...
+/*
+SELECT Sname
+FROM Student, (SELECT Sno, Count(Cno) AS Sum_Cno
+                FROM SC
+                GROUP BY Sno) AS Stu_Sum_Cno
+WHERE Student.Sno = Stu_Sum_Cno.Sno AND Stu_Sum_Cno.Sum_Cno > 2
+*/
 
 
 /*
