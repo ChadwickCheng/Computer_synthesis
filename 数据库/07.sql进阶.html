@@ -1,0 +1,97 @@
+<!-- 
+1. 左外连接：left join, 以左表为准返回左表所有数据，右表满足on条件的数据会返回，否则null
+2. 右外连接：right join
+3. 内连接：inner join, 满足on条件的数据才返回，等价于where条件等值连接
+    隐式内连接：SELECT * FROM A, B WHERE A.id = B.id;
+    显式内连接：SELECT * FROM A [INNER] JOIN B ON A.id = B.id;
+4. 建表
+    约束条件：NOT NULL 不允许空值；UNIQUE 唯一；CHECK 字段范围限制；DEFAULT 字段默认值；FOREIGN KEY 外键约束；PRIMARY KEY 主键约束，唯一非空
+    CREATE TABLE Teacher (
+        tec_id INT AUTO_INCREMENT PRIMARY KEY, // auto_increment 自增
+        Salary DECIMAL(10, 2) CHECK (Salary > 0),
+        login_date DATE DEFAULT SYSDATE
+    )
+    外键约束：学生和老师1对n，两张表保持联系，要在学生表加上老师的外键
+    CREATE TABLE Stu(
+        ...
+        tec_id INT,
+        FOREIGN KEY (tec_id) REFERENCES Teacher(tec_id)
+    )
+5. 数据库用户和权限管理
+    创建用户：CREATE USER [IF NOT EXISTS] 'user_name'@'数据库链接主机name' IDENTIFIED BY 'password'; // IF NOT EXISTS 如果用户不存在才创建
+    授权：GRANT 权限 ON 数据库名.* TO 'user_name'@'数据库链接主机name' [WITH GRANT OPTION]; // WITH GRANT OPTION 允许被授权用户继续授权其他用户
+    回收：REVOKE 权限 ON 数据库名.* FROM 'user_name'@'数据库链接主机name';
+6. 事务：
+    定义：一组原子操作
+        START/BEGIN TRANSACTION; // 开始事务
+        COMMIT; // 提交事务，事务所有操作都被确认，对数据库的更改永久保存
+        ROLLBACK; // 回滚事务，撤销自事务开始以来的所有更改
+    原子性：全部成功或失败，完全提交或回滚
+        BEGIN INSERT xxx UPDATE xxx COMMIT
+    一致性：事务执行前后数据库保持一致
+    隔离性：并发事务之间相互隔离不影响，每个事务独立运行，中间状态对其他事务不可见
+    持久性：事务一旦提交，对数据库的更改永久保存，即使系统崩溃也不会丢失
+        如何保证持久性：
+            1. 预写日志：数据页写入磁盘前，先写事务日志
+            2. 重做日志：记录所有已提交事务的修改操作
+            3. 检查点机制：定期将内存脏页刷新到磁盘
+            4. 故障恢复：系统重启时，重做日志，重新执行已提交但未持久化的操作
+7. 索引：数据库对象，提高数据检索速度；主键默认为主索引
+    创建：CREATE [UNIQUE] INDEX index_name ON table_name(column_name); //b树索引,唯一，写多个列就是复合索引；位图索引，适合低基数列，比如性别只有两种，适合数据仓库；函数索引，加快函数查询速度
+    索引有开销，并非越多越好；主键，唯一，外键，WHERE子句频繁使用的列，ORDERBY，GROUPBY，连接查询适合做索引；小表不适合做索引，频繁更新的列，低基，包含大量null
+8. 视图：虚拟表，基于sql查询的结果集；数据安全，隐藏复杂查询
+    创建：CREATE VIEW 视图名称 AS
+        SELECT column1, column2, ...
+        FROM table_name
+        WHERE condition;
+9. sql存储过程：一组完成特定功能的sql语句集合，编译后存储于数据库，接受参数执行返回结果
+    创建：CREATE [OR REPLACE] PROCEDURE procedure_name
+        [(params1 [IN|OUT|INOUT] datatype1, params2...)]
+        IS|AS // IS和AS等价，定义存储过程主体开始
+        BEGIN
+         -- PL/SQL代码块
+        EXCEPTION
+            -- 异常处理
+        END procedure_name;
+    例子：CREATE OR REPLACE PROCEDURE GetTeacherInfo
+            (p_tno IN INT, p_tname OUT VARCHAR2, p_salary OUT DECIMAL)
+        IS
+        BEGIN
+            SELECT tname, tsalary INTO p_tname, p_salary FROM Teacher WHERE tno = p_tno;
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                DBMS_OUTPUT.PUT_LINE('No teacher found with tno: ' || p_tno);
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+        END GetTeacherInfo;
+10. sql触发器：特殊存储过程，数据表执行特定操作比如插入删除，表级别维护业务规则和数据完整性
+    类型：DML触发器，操作语言触发；INSTEAD OF触发器，视图触发；DDL触发器，数据库定义时触发；数据库事件触发器，数据库系统事件比如登陆注销启动关闭触发
+    重点：DML触发器
+    看懂：CREATE [OR REPLACE] TRIGGER trigger_name
+        {BEFORE | AFTER | INSTEAD OF} // 触发时机
+        {INSERT [OR] | UPDATE [OF column[...]] [OR] | DELETE} // 触发事件
+        ON table_name [FOR EACH ROW] [WHEN (condition)] // 触发对象，行级触发需要FOR EACH ROW, 比如更新几行触发几次，省略就是语句级，每条语句都触发一次,when conditon必须是行级触发器
+        BEGIN
+            -- PL/SQL代码块
+        END;
+    例子：
+        CREATE OR REPLACE TRIGGER InsertUserLog
+        AFTER INSERT
+        ON users FOR EACH ROW
+        BEGIN
+            INSERT INTO user_logs (user_id, action, log_time)
+            VALUES (:NEW.user_id, 'INSERT', SYSDATE);
+        END;
+11. 作业：调度和执行数据库任务的机制，允许程序员安排任务在特定时间或间隔自动执行；一般用于定期任务比如备份清理生成报表
+-->
+<!-- 
+预写日志：事前打草稿 → 防止操作记录丢失
+重做日志：操作记录簿 → 数据丢失时的恢复源
+检查点机制：定期存档 → 减少故障恢复时间
+故障恢复：救援方案 → 结合以上三项恢复到最后的安全状态
+
+:NEW.user_id 是SQL触发器中的伪记录，用来引用触发事件后的新值：
+INSERT → :NEW 是新插入的值（:OLD 为 NULL）
+UPDATE → :NEW 是更新后的值，:OLD 是更新前的值
+DELETE → :OLD 是删除前的值（:NEW 为 NULL）
+-->
