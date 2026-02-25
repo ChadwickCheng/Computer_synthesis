@@ -20,12 +20,12 @@
 /*
 答：
 CREATE TABLE Teacher (
-    Tno   VARCHAR(20) NOT NULL,
+    Tno VARCHAR(20) NOT NULL,
     Tname VARCHAR(50),
-    Title VARCHAR(20),
-    Dept  VARCHAR(50),
+    Title VARCHAR(20)
+    Dept VARCHAR(50)
     PRIMARY KEY (Tno)
-);
+)
 */
 
 
