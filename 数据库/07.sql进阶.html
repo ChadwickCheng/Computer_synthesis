@@ -95,3 +95,723 @@ INSERT → :NEW 是新插入的值（:OLD 为 NULL）
 UPDATE → :NEW 是更新后的值，:OLD 是更新前的值
 DELETE → :OLD 是删除前的值（:NEW 为 NULL）
 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL进阶知识点详解</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+        .right-panel {
+            width: 480px;
+            background: white;
+            border-left: 3px solid #2196F3;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        h1 { color: #333; border-bottom: 3px solid #2196F3; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { color: #2196F3; margin-top: 30px; border-left: 5px solid #2196F3; padding-left: 10px; }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .formula {
+            background: #e3f2fd;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .explanation {
+            color: #555;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 13px;
+        }
+        th { background-color: #2196F3; color: white; padding: 10px; text-align: left; font-size: 13px; }
+        td { padding: 8px 10px; border: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #e3f2fd; }
+        .result-title { font-weight: bold; color: #1565c0; margin-top: 15px; font-size: 16px; }
+        .table-wrapper { margin-bottom: 20px; }
+        .table-name { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 14px; background: #bbdefb; padding: 6px 10px; border-radius: 4px; }
+        button {
+            background: #2196F3; color: white; border: none;
+            padding: 8px 18px; border-radius: 5px; cursor: pointer;
+            font-size: 13px; margin: 5px 5px 5px 0;
+        }
+        button:hover { background: #1976D2; }
+        button.danger { background: #f44336; }
+        button.danger:hover { background: #c62828; }
+        button.success { background: #4CAF50; }
+        button.success:hover { background: #388E3C; }
+        button.warn { background: #ff9800; }
+        button.warn:hover { background: #e65100; }
+        .null-cell { color: #999; font-style: italic; }
+        .highlight { background-color: #fff176 !important; font-weight: bold; }
+        .highlight-red { background-color: #ffcdd2 !important; }
+        .sticky-title { position: sticky; top: 0; background: white; z-index: 10; padding: 10px 0; border-bottom: 2px solid #2196F3; margin-bottom: 20px; }
+        .tag {
+            display: inline-block; padding: 2px 8px; border-radius: 12px;
+            font-size: 12px; font-weight: bold; margin: 2px;
+        }
+        .tag-green { background: #c8e6c9; color: #2e7d32; }
+        .tag-red { background: #ffcdd2; color: #c62828; }
+        .tag-blue { background: #bbdefb; color: #1565c0; }
+        .tag-orange { background: #ffe0b2; color: #e65100; }
+        .step-flow {
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 8px; margin: 12px 0; padding: 12px;
+            background: #f8f9fa; border-radius: 6px;
+        }
+        .step-box {
+            background: #2196F3; color: white; padding: 8px 14px;
+            border-radius: 6px; font-size: 13px; font-weight: bold;
+        }
+        .step-arrow { font-size: 20px; color: #888; }
+        .step-commit { background: #4CAF50; }
+        .step-rollback { background: #f44336; }
+        .step-begin { background: #9c27b0; }
+        .acid-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0;
+        }
+        .acid-card {
+            padding: 12px; border-radius: 6px; border-left: 4px solid;
+        }
+        .acid-card h4 { font-size: 14px; margin-bottom: 5px; }
+        .acid-card p { font-size: 12px; color: #555; line-height: 1.5; }
+        .acid-a { border-color: #e91e63; background: #fce4ec; }
+        .acid-c { border-color: #4caf50; background: #e8f5e9; }
+        .acid-i { border-color: #2196f3; background: #e3f2fd; }
+        .acid-d { border-color: #ff9800; background: #fff3e0; }
+        .index-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+        .index-card { padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        .index-card h4 { font-size: 13px; color: #1565c0; margin-bottom: 5px; }
+        .index-card p { font-size: 12px; color: #555; line-height: 1.5; }
+        .wal-step {
+            display: flex; align-items: flex-start; gap: 10px;
+            margin: 8px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;
+        }
+        .wal-num {
+            background: #2196F3; color: white; border-radius: 50%;
+            width: 26px; height: 26px; display: flex; align-items: center;
+            justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0;
+        }
+        .wal-content { font-size: 13px; line-height: 1.6; }
+        .trigger-pseudo { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
+        .pseudo-card { padding: 10px; border-radius: 6px; text-align: center; font-size: 13px; }
+        .pseudo-insert { background: #e8f5e9; border: 1px solid #4caf50; }
+        .pseudo-update { background: #e3f2fd; border: 1px solid #2196f3; }
+        .pseudo-delete { background: #fce4ec; border: 1px solid #e91e63; }
+        .pseudo-card .op { font-weight: bold; font-size: 14px; margin-bottom: 6px; }
+        .pseudo-card .val { font-size: 12px; color: #555; }
+        .log-container {
+            background: #1e1e2e; color: #cdd6f4; border-radius: 6px;
+            padding: 12px; font-family: 'Courier New', monospace;
+            font-size: 12px; line-height: 1.7; margin: 10px 0;
+            max-height: 200px; overflow-y: auto;
+        }
+        .log-ok { color: #a6e3a1; }
+        .log-err { color: #f38ba8; }
+        .log-info { color: #89b4fa; }
+        .log-warn { color: #fab387; }
+    </style>
+</head>
+<body>
+
+<!-- 左侧：知识点详解 -->
+<div class="left-panel">
+    <h1>📖 SQL进阶知识点详解</h1>
+
+    <!-- 1. JOIN 连接 -->
+    <div class="section">
+        <h2>1️⃣～3️⃣ 表连接 (JOIN)</h2>
+        <div class="formula">-- 内连接（只返回满足条件的行）
+SELECT * FROM Teacher t INNER JOIN Stu s ON t.tec_id = s.tec_id;
+-- 隐式写法
+SELECT * FROM Teacher t, Stu s WHERE t.tec_id = s.tec_id;
+
+-- 左外连接（保留左表所有行）
+SELECT * FROM Teacher t LEFT JOIN Stu s ON t.tec_id = s.tec_id;
+
+-- 右外连接（保留右表所有行）
+SELECT * FROM Teacher t RIGHT JOIN Stu s ON t.tec_id = s.tec_id;</div>
+        <div class="explanation">💡 记忆口诀：INNER → 交集；LEFT → 左表全保留；RIGHT → 右表全保留；无匹配处填 NULL</div>
+        <div>
+            <button onclick="showInnerJoin()">内连接 INNER JOIN</button>
+            <button onclick="showLeftJoin()" class="success">左外连接 LEFT JOIN</button>
+            <button onclick="showRightJoin()" class="warn">右外连接 RIGHT JOIN</button>
+        </div>
+        <div id="joinResult"></div>
+    </div>
+
+    <!-- 4. 建表与约束 -->
+    <div class="section">
+        <h2>4️⃣ 建表与约束条件</h2>
+        <div class="formula">CREATE TABLE Teacher (
+    tec_id   INT AUTO_INCREMENT PRIMARY KEY,  -- 主键，唯一非空，自增
+    tname    VARCHAR(50) NOT NULL,            -- 非空
+    email    VARCHAR(100) UNIQUE,             -- 唯一
+    salary   DECIMAL(10,2) CHECK(salary > 0), -- 范围检查
+    dept     VARCHAR(50) DEFAULT '未分配'     -- 默认值
+);
+
+CREATE TABLE Stu (
+    stu_id  INT AUTO_INCREMENT PRIMARY KEY,
+    sname   VARCHAR(50) NOT NULL,
+    tec_id  INT,
+    FOREIGN KEY (tec_id) REFERENCES Teacher(tec_id)  -- 外键
+);</div>
+        <div class="explanation">💡 外键让两张表保持关联：学生表的 tec_id 指向教师表，插入时数据库自动校验合法性</div>
+        <div>
+            <button onclick="showConstraints()">查看约束说明</button>
+            <button onclick="showFKDemo()" class="success">外键约束演示</button>
+        </div>
+        <div id="constraintResult"></div>
+    </div>
+
+    <!-- 5. 用户与权限 -->
+    <div class="section">
+        <h2>5️⃣ 数据库用户与权限管理</h2>
+        <div class="formula">-- 创建用户
+CREATE USER IF NOT EXISTS 'zhangsan'@'localhost' IDENTIFIED BY 'pwd123';
+
+-- 授权（WITH GRANT OPTION 允许继续授权）
+GRANT SELECT, INSERT ON school.* TO 'zhangsan'@'localhost';
+GRANT ALL PRIVILEGES ON school.* TO 'admin'@'%' WITH GRANT OPTION;
+
+-- 回收权限
+REVOKE INSERT ON school.* FROM 'zhangsan'@'localhost';</div>
+        <div class="explanation">💡 '@localhost' 限制只能本机连接；'@%' 允许任意主机；WITH GRANT OPTION 让被授权者可以继续授权别人</div>
+        <button onclick="showPrivDemo()">权限管理演示</button>
+        <div id="privResult"></div>
+    </div>
+
+    <!-- 6. 事务与ACID -->
+    <div class="section">
+        <h2>6️⃣ 事务 (Transaction) 与 ACID</h2>
+        <div class="formula">START TRANSACTION;
+    INSERT INTO account(id, balance) VALUES(1, 1000);
+    UPDATE account SET balance = balance - 500 WHERE id = 1;
+COMMIT;   -- 成功提交
+
+-- 出错时回滚
+START TRANSACTION;
+    UPDATE account SET balance = balance - 500 WHERE id = 1;
+    -- 此处发生错误...
+ROLLBACK; -- 撤销所有更改</div>
+        <div class="explanation">💡 事务就像"打包操作"：要么全成功，要么全失败，保证数据不会只做一半</div>
+        <div>
+            <button class="success" onclick="runTransaction(true)">▶ 模拟 COMMIT（转账成功）</button>
+            <button class="danger" onclick="runTransaction(false)">✕ 模拟 ROLLBACK（转账失败）</button>
+            <button onclick="showACID()">ACID 四大特性</button>
+        </div>
+        <div id="transactionResult"></div>
+        <div id="acidResult"></div>
+        <div id="durabilityResult"></div>
+    </div>
+
+    <!-- 7. 索引 -->
+    <div class="section">
+        <h2>7️⃣ 索引 (Index)</h2>
+        <div class="formula">-- 创建普通 B树索引
+CREATE INDEX idx_sname ON Stu(sname);
+
+-- 唯一索引
+CREATE UNIQUE INDEX idx_email ON Teacher(email);
+
+-- 复合索引（多列）
+CREATE INDEX idx_dept_salary ON Teacher(dept, salary);
+
+-- 删除索引
+DROP INDEX idx_sname ON Stu;</div>
+        <div class="explanation">💡 索引 = 书的目录，查找快但占空间；主键自动建索引；不要过多添加索引，写操作会变慢</div>
+        <button onclick="showIndexDemo()">适合 / 不适合 建索引的场景</button>
+        <div id="indexResult"></div>
+    </div>
+
+    <!-- 8. 视图 -->
+    <div class="section">
+        <h2>8️⃣ 视图 (View)</h2>
+        <div class="formula">-- 创建视图：隐藏薪资敏感信息
+CREATE VIEW TeacherPublic AS
+    SELECT tec_id, tname, dept FROM Teacher;
+
+-- 创建视图：高薪教师
+CREATE VIEW HighSalaryTeacher AS
+    SELECT tname, dept, salary FROM Teacher WHERE salary > 8000;
+
+-- 像查普通表一样使用视图
+SELECT * FROM TeacherPublic;
+SELECT * FROM HighSalaryTeacher;</div>
+        <div class="explanation">💡 视图是虚拟表，不存储数据；对外只暴露必要列，隐藏敏感字段，简化复杂查询</div>
+        <button onclick="showViewDemo()">视图演示</button>
+        <div id="viewResult"></div>
+    </div>
+
+    <!-- 9. 存储过程 -->
+    <div class="section">
+        <h2>9️⃣ 存储过程 (Stored Procedure)</h2>
+        <div class="formula">CREATE OR REPLACE PROCEDURE GetTeacherInfo
+    (p_tno IN INT, p_tname OUT VARCHAR2, p_salary OUT DECIMAL)
+IS
+BEGIN
+    SELECT tname, salary INTO p_tname, p_salary
+    FROM Teacher WHERE tec_id = p_tno;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('未找到教师: ' || p_tno);
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('错误: ' || SQLERRM);
+END GetTeacherInfo;</div>
+        <div class="explanation">💡 参数方向：IN = 输入参数（调用方传入）；OUT = 输出参数（过程写回）；INOUT = 既输入又输出</div>
+        <button onclick="showProcedureDemo()">▶ 模拟调用存储过程</button>
+        <div id="procedureResult"></div>
+    </div>
+
+    <!-- 10. 触发器 -->
+    <div class="section">
+        <h2>🔟 触发器 (Trigger)</h2>
+        <div class="formula">CREATE OR REPLACE TRIGGER InsertUserLog
+AFTER INSERT
+ON users FOR EACH ROW          -- 行级触发器
+BEGIN
+    INSERT INTO user_logs(user_id, action, log_time)
+    VALUES (:NEW.user_id, 'INSERT', SYSDATE);
+END;</div>
+        <div class="explanation">💡 :NEW 引用新行数据，:OLD 引用旧行数据；BEFORE/AFTER 决定何时触发；FOR EACH ROW 为行级（影响几行触发几次）</div>
+        <div>
+            <button onclick="showPseudoRecord()">:NEW / :OLD 伪记录说明</button>
+            <button onclick="simulateTrigger('INSERT')" class="success">模拟 INSERT 触发</button>
+            <button onclick="simulateTrigger('UPDATE')" class="warn">模拟 UPDATE 触发</button>
+            <button onclick="simulateTrigger('DELETE')" class="danger">模拟 DELETE 触发</button>
+        </div>
+        <div id="triggerResult"></div>
+        <div id="triggerLog" style="display:none">
+            <div style="font-weight:bold;color:#1565c0;margin-top:15px;">📋 触发器执行日志 (user_logs)</div>
+            <table id="logTable"></table>
+        </div>
+    </div>
+
+    <!-- 11. 作业调度 -->
+    <div class="section">
+        <h2>1️⃣1️⃣ 作业调度 (Job Scheduling)</h2>
+        <div class="formula">-- Oracle DBMS_SCHEDULER 创建作业
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB(
+        job_name   => 'DAILY_BACKUP',
+        job_type   => 'PLSQL_BLOCK',
+        job_action => 'BEGIN backup_database(); END;',
+        start_date => SYSTIMESTAMP,
+        repeat_interval => 'FREQ=DAILY; BYHOUR=2',  -- 每天凌晨2点
+        enabled    => TRUE
+    );
+END;
+
+-- MySQL EVENT
+CREATE EVENT daily_cleanup
+ON SCHEDULE EVERY 1 DAY STARTS '2024-01-01 02:00:00'
+DO DELETE FROM logs WHERE log_time < DATE_SUB(NOW(), INTERVAL 30 DAY);</div>
+        <div class="explanation">💡 作业调度 = 数据库的"定时闹钟"；常用于：每日备份、清理过期日志、定时生成报表</div>
+        <button onclick="showJobDemo()">作业调度场景演示</button>
+        <div id="jobResult"></div>
+    </div>
+
+</div>
+
+<!-- 右侧：固定数据表 -->
+<div class="right-panel">
+    <div class="sticky-title">
+        <h2 style="margin:0;color:#2196F3;">🗂️ 基础数据表</h2>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">👨‍🏫 教师表 (Teacher)</div>
+        <table id="teacherTable"></table>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">🎓 学生表 (Stu)</div>
+        <table id="stuTable"></table>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">👤 用户表 (users)</div>
+        <table id="usersTable"></table>
+    </div>
+    <div class="table-wrapper">
+        <div class="table-name">💰 账户表 (account)</div>
+        <table id="accountTable"></table>
+    </div>
+</div>
+
+<script>
+// ============ 基础数据 ============
+const teachers = [
+    {tec_id: 1, tname: '王教授', email: 'wang@school.com', salary: 12000, dept: '计算机系'},
+    {tec_id: 2, tname: '李老师', email: 'li@school.com',   salary: 8500,  dept: '数学系'},
+    {tec_id: 3, tname: '张讲师', email: 'zhang@school.com',salary: 6800,  dept: '计算机系'},
+    {tec_id: 4, tname: '陈教授', email: 'chen@school.com', salary: 15000, dept: '物理系'},
+];
+const students = [
+    {stu_id: 1, sname: '小明', tec_id: 1},
+    {stu_id: 2, sname: '小红', tec_id: 1},
+    {stu_id: 3, sname: '小华', tec_id: 2},
+    {stu_id: 4, sname: '小强', tec_id: 3},
+    {stu_id: 5, sname: '小丽', tec_id: null},  // 暂无教师（未分配）
+];
+const users = [
+    {user_id: 101, username: 'alice', role: 'admin'},
+    {user_id: 102, username: 'bob',   role: 'editor'},
+    {user_id: 103, username: 'carol', role: 'viewer'},
+];
+let accounts = [
+    {id: 'A001', owner: '张三', balance: 5000},
+    {id: 'A002', owner: '李四', balance: 3000},
+];
+const userLogs = [];
+
+// ============ 工具函数 ============
+function renderTable(data, elementId) {
+    if (!data || data.length === 0) {
+        document.getElementById(elementId).innerHTML = '<tr><td style="color:#999;text-align:center">（空）</td></tr>';
+        return;
+    }
+    const keys = Object.keys(data[0]);
+    let html = '<tr>' + keys.map(k => `<th>${k}</th>`).join('') + '</tr>';
+    data.forEach(row => {
+        html += '<tr>' + keys.map(k => {
+            const v = row[k];
+            return v === null ? `<td class="null-cell">NULL</td>` : `<td>${v}</td>`;
+        }).join('') + '</tr>';
+    });
+    document.getElementById(elementId).innerHTML = html;
+}
+function renderResult(containerId, data, title) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = `<div class="result-title">📊 ${title}（共 ${data.length} 行）</div><table id="${containerId}_t"></table>`;
+    renderTable(data, `${containerId}_t`);
+}
+
+// 初始化右侧表格
+renderTable(teachers, 'teacherTable');
+renderTable(students, 'stuTable');
+renderTable(users, 'usersTable');
+renderTable(accounts, 'accountTable');
+
+// ============ 1-3. JOIN ============
+function showInnerJoin() {
+    const result = teachers.flatMap(t =>
+        students.filter(s => s.tec_id === t.tec_id).map(s => ({
+            tec_id: t.tec_id, tname: t.tname, dept: t.dept,
+            stu_id: s.stu_id, sname: s.sname
+        }))
+    );
+    renderResult('joinResult', result, '内连接 INNER JOIN（只保留有教师的学生）');
+}
+function showLeftJoin() {
+    const result = teachers.flatMap(t => {
+        const matches = students.filter(s => s.tec_id === t.tec_id);
+        return matches.length
+            ? matches.map(s => ({tec_id: t.tec_id, tname: t.tname, dept: t.dept, stu_id: s.stu_id, sname: s.sname}))
+            : [{tec_id: t.tec_id, tname: t.tname, dept: t.dept, stu_id: null, sname: null}];
+    });
+    renderResult('joinResult', result, '左外连接 LEFT JOIN（保留所有教师，无学生填 NULL）');
+}
+function showRightJoin() {
+    const result = students.map(s => {
+        const t = teachers.find(t => t.tec_id === s.tec_id);
+        return t
+            ? {tec_id: t.tec_id, tname: t.tname, dept: t.dept, stu_id: s.stu_id, sname: s.sname}
+            : {tec_id: null, tname: null, dept: null, stu_id: s.stu_id, sname: s.sname};
+    });
+    renderResult('joinResult', result, '右外连接 RIGHT JOIN（保留所有学生，无教师填 NULL）');
+}
+
+// ============ 4. 建表约束 ============
+function showConstraints() {
+    const data = [
+        {约束: 'PRIMARY KEY', 含义: '主键：唯一 + 非空', 例子: 'tec_id INT PRIMARY KEY'},
+        {约束: 'NOT NULL',    含义: '不允许空值',         例子: 'tname VARCHAR(50) NOT NULL'},
+        {约束: 'UNIQUE',      含义: '值必须唯一',          例子: 'email VARCHAR(100) UNIQUE'},
+        {约束: 'CHECK',       含义: '字段范围限制',         例子: 'salary DECIMAL CHECK(salary>0)'},
+        {约束: 'DEFAULT',     含义: '字段默认值',           例子: "dept VARCHAR DEFAULT '未分配'"},
+        {约束: 'FOREIGN KEY', 含义: '外键，引用其他表主键',  例子: 'FOREIGN KEY(tec_id) REFERENCES Teacher(tec_id)'},
+        {约束: 'AUTO_INCREMENT', 含义: '自动递增（MySQL）',   例子: 'id INT AUTO_INCREMENT'},
+    ];
+    renderResult('constraintResult', data, '七种常见约束');
+}
+function showFKDemo() {
+    document.getElementById('constraintResult').innerHTML = `
+        <div class="result-title">🔗 外键约束演示</div>
+        <div class="explanation">
+            <strong>合法操作：</strong>插入学生时 tec_id=1，教师表中存在 tec_id=1 ✅<br>
+            <strong>违规操作：</strong>插入学生时 tec_id=99，教师表中不存在 → 数据库报错 ❌<br>
+            <strong>级联删除：</strong>DELETE Teacher WHERE tec_id=1 → 该教师的所有学生记录也被删除（ON DELETE CASCADE）
+        </div>
+        <table>
+            <tr><th>操作</th><th>tec_id</th><th>结果</th></tr>
+            <tr><td>INSERT Stu(sname='新生', tec_id=1)</td><td>1</td><td style="color:#2e7d32;font-weight:bold">✅ 成功（外键存在）</td></tr>
+            <tr><td>INSERT Stu(sname='新生', tec_id=99)</td><td>99</td><td style="color:#c62828;font-weight:bold">❌ 报错（外键不存在）</td></tr>
+            <tr><td>INSERT Stu(sname='新生', tec_id=NULL)</td><td>NULL</td><td style="color:#e65100;font-weight:bold">⚠️ 允许（未分配教师）</td></tr>
+        </table>`;
+}
+
+// ============ 5. 权限管理 ============
+function showPrivDemo() {
+    const privData = [
+        {用户: 'zhangsan@localhost', 权限: 'SELECT, INSERT', 数据库: 'school.*', 可授权: '否'},
+        {用户: 'admin@%',           权限: 'ALL PRIVILEGES',  数据库: 'school.*', 可授权: '是 (WITH GRANT OPTION)'},
+        {用户: 'reporter@office',   权限: 'SELECT',          数据库: 'school.*', 可授权: '否'},
+    ];
+    document.getElementById('privResult').innerHTML = `
+        <div class="result-title">👥 当前用户权限表</div>
+        <table id="privTable"></table>
+        <div class="explanation" style="margin-top:10px">
+            🔴 <strong>REVOKE 后：</strong>zhangsan 失去 INSERT 权限，只能查询<br>
+            🟢 <strong>admin</strong> 可将自己的权限授予其他用户（WITH GRANT OPTION）<br>
+            🔵 <strong>@%</strong> 允许从任意主机连接，<strong>@localhost</strong> 仅本机
+        </div>`;
+    renderTable(privData, 'privTable');
+}
+
+// ============ 6. 事务 ============
+function runTransaction(commit) {
+    const before = [...accounts];
+    const log = [];
+    log.push(`<span class="log-info">[BEGIN] 开始事务</span>`);
+    log.push(`<span class="log-info">[READ]  张三余额: ${accounts[0].balance} 元</span>`);
+    log.push(`<span class="log-warn">[EXEC]  UPDATE account SET balance = balance - 1000 WHERE owner='张三'</span>`);
+    log.push(`<span class="log-warn">[EXEC]  UPDATE account SET balance = balance + 1000 WHERE owner='李四'</span>`);
+
+    if (commit) {
+        accounts[0].balance -= 1000;
+        accounts[1].balance += 1000;
+        log.push(`<span class="log-ok">[COMMIT] 转账成功！张三 → 李四：1000 元</span>`);
+        renderTable(accounts, 'accountTable');
+    } else {
+        log.push(`<span class="log-err">[ERROR]  余额不足或网络异常！</span>`);
+        log.push(`<span class="log-err">[ROLLBACK] 回滚所有更改，数据恢复原样</span>`);
+    }
+
+    document.getElementById('transactionResult').innerHTML = `
+        <div class="result-title">${commit ? '✅ COMMIT 成功' : '❌ ROLLBACK 回滚'}</div>
+        <div class="log-container">${log.join('<br>')}</div>
+        <div class="step-flow">
+            <div class="step-box step-begin">BEGIN</div>
+            <div class="step-arrow">→</div>
+            <div class="step-box">UPDATE张三</div>
+            <div class="step-arrow">→</div>
+            <div class="step-box">UPDATE李四</div>
+            <div class="step-arrow">→</div>
+            <div class="step-box ${commit ? 'step-commit' : 'step-rollback'}">${commit ? 'COMMIT' : 'ROLLBACK'}</div>
+        </div>`;
+}
+
+function showACID() {
+    document.getElementById('acidResult').innerHTML = `
+        <div class="result-title">⚗️ ACID 四大特性</div>
+        <div class="acid-grid">
+            <div class="acid-card acid-a">
+                <h4>A — 原子性 Atomicity</h4>
+                <p>事务内所有操作要么全部成功，要么全部失败回滚。转账：扣款+入账必须同时成功，不能只扣不入。</p>
+            </div>
+            <div class="acid-card acid-c">
+                <h4>C — 一致性 Consistency</h4>
+                <p>事务执行前后数据库状态保持一致。转账前后两人余额总和不变。</p>
+            </div>
+            <div class="acid-card acid-i">
+                <h4>I — 隔离性 Isolation</h4>
+                <p>并发事务之间互不干扰，每个事务独立运行，中间状态对其他事务不可见。</p>
+            </div>
+            <div class="acid-card acid-d">
+                <h4>D — 持久性 Durability</h4>
+                <p>事务一旦提交，更改永久保存，即使系统崩溃也不丢失。</p>
+            </div>
+        </div>`;
+    document.getElementById('durabilityResult').innerHTML = `
+        <div class="result-title" style="margin-top:15px">🛡️ 持久性的四大保障机制</div>
+        <div class="wal-step"><div class="wal-num">1</div><div class="wal-content"><strong>预写日志 (WAL)</strong>：数据写磁盘前先写日志 → 防止操作记录丢失（事前打草稿）</div></div>
+        <div class="wal-step"><div class="wal-num">2</div><div class="wal-content"><strong>重做日志 (Redo Log)</strong>：记录已提交事务的所有修改 → 崩溃后可重演（操作记录簿）</div></div>
+        <div class="wal-step"><div class="wal-num">3</div><div class="wal-content"><strong>检查点机制 (Checkpoint)</strong>：定期将内存脏页刷新到磁盘 → 减少恢复时间（定期存档）</div></div>
+        <div class="wal-step"><div class="wal-num">4</div><div class="wal-content"><strong>故障恢复</strong>：重启时重放重做日志，恢复已提交但未持久化的操作（救援方案）</div></div>`;
+}
+
+// ============ 7. 索引 ============
+function showIndexDemo() {
+    document.getElementById('indexResult').innerHTML = `
+        <div class="result-title">📑 索引使用建议</div>
+        <div class="index-grid">
+            <div class="index-card" style="border-left:3px solid #4caf50">
+                <h4>✅ 适合建索引</h4>
+                <p>
+                    • 主键列（自动建）<br>
+                    • 唯一列 (UNIQUE)<br>
+                    • 外键列<br>
+                    • WHERE 频繁过滤的列<br>
+                    • ORDER BY / GROUP BY 列<br>
+                    • 连接查询的 ON 列
+                </p>
+            </div>
+            <div class="index-card" style="border-left:3px solid #f44336">
+                <h4>❌ 不适合建索引</h4>
+                <p>
+                    • 小表（全表扫描更快）<br>
+                    • 频繁 UPDATE/INSERT 的列<br>
+                    • 低基数列（如性别：只有男/女）<br>
+                    • 包含大量 NULL 的列<br>
+                    • 极少用于查询的列
+                </p>
+            </div>
+        </div>
+        <div class="explanation" style="margin-top:8px">
+            🌳 <strong>B树索引</strong>：通用，适合范围查询<br>
+            🗺️ <strong>位图索引</strong>：低基数列（性别/状态），适合数据仓库，不适合频繁更新<br>
+            📐 <strong>函数索引</strong>：列上加函数时建，如 UPPER(name) 的查询
+        </div>`;
+}
+
+// ============ 8. 视图 ============
+function showViewDemo() {
+    const publicView = teachers.map(t => ({tec_id: t.tec_id, tname: t.tname, dept: t.dept}));
+    const highSalary = teachers.filter(t => t.salary > 8000).map(t => ({tname: t.tname, dept: t.dept, salary: t.salary}));
+    document.getElementById('viewResult').innerHTML = `
+        <div class="result-title">👁️ 视图演示</div>
+        <div style="font-weight:bold;color:#555;margin:10px 0 4px">
+            视图 TeacherPublic（隐藏了 email 和 salary 敏感字段）：
+        </div>
+        <table id="v1"></table>
+        <div style="font-weight:bold;color:#555;margin:10px 0 4px">
+            视图 HighSalaryTeacher（salary > 8000 的高薪教师）：
+        </div>
+        <table id="v2"></table>
+        <div class="explanation">💡 普通用户只能查 TeacherPublic，看不到工资；视图本身不存储数据，每次查询实时从原表计算</div>`;
+    renderTable(publicView, 'v1');
+    renderTable(highSalary, 'v2');
+}
+
+// ============ 9. 存储过程 ============
+function showProcedureDemo() {
+    const res = document.getElementById('procedureResult');
+    let html = `<div class="result-title">⚙️ 模拟调用 GetTeacherInfo</div>`;
+    [1, 2, 99].forEach(id => {
+        const t = teachers.find(t => t.tec_id === id);
+        if (t) {
+            html += `<div class="log-container">
+<span class="log-info">CALL GetTeacherInfo(p_tno=${id}, :p_tname, :p_salary);</span>
+<span class="log-ok">→ p_tname = '${t.tname}', p_salary = ${t.salary}</span></div>`;
+        } else {
+            html += `<div class="log-container">
+<span class="log-info">CALL GetTeacherInfo(p_tno=${id}, :p_tname, :p_salary);</span>
+<span class="log-err">→ EXCEPTION: NO_DATA_FOUND</span>
+<span class="log-err">→ 未找到教师: ${id}</span></div>`;
+        }
+    });
+    html += `<div class="explanation">
+        📥 <strong>IN</strong>：调用方传入参数（p_tno）<br>
+        📤 <strong>OUT</strong>：过程写回结果（p_tname, p_salary）<br>
+        🔄 <strong>INOUT</strong>：既输入又输出
+    </div>`;
+    res.innerHTML = html;
+}
+
+// ============ 10. 触发器 ============
+function showPseudoRecord() {
+    document.getElementById('triggerResult').innerHTML = `
+        <div class="result-title">🔎 :NEW / :OLD 伪记录对照表</div>
+        <div class="trigger-pseudo">
+            <div class="pseudo-card pseudo-insert">
+                <div class="op">INSERT</div>
+                <div class="val">:NEW = 新插入的值<br>:OLD = <span style="color:#999">NULL</span></div>
+            </div>
+            <div class="pseudo-card pseudo-update">
+                <div class="op">UPDATE</div>
+                <div class="val">:NEW = 更新后的值<br>:OLD = 更新前的值</div>
+            </div>
+            <div class="pseudo-card pseudo-delete">
+                <div class="op">DELETE</div>
+                <div class="val">:NEW = <span style="color:#999">NULL</span><br>:OLD = 删除前的值</div>
+            </div>
+        </div>`;
+}
+
+function simulateTrigger(op) {
+    const now = new Date().toLocaleTimeString();
+    let logEntry, targetUser;
+    if (op === 'INSERT') {
+        targetUser = {user_id: 104, username: 'dave', role: 'viewer'};
+        users.push(targetUser);
+        logEntry = {log_id: userLogs.length + 1, user_id: 104, action: 'INSERT', log_time: now};
+        renderTable(users, 'usersTable');
+    } else if (op === 'UPDATE') {
+        if (users.length > 0) users[0].role = 'superadmin';
+        logEntry = {log_id: userLogs.length + 1, user_id: users[0].user_id, action: 'UPDATE', log_time: now};
+        renderTable(users, 'usersTable');
+    } else {
+        logEntry = {log_id: userLogs.length + 1, user_id: users[users.length-1].user_id, action: 'DELETE', log_time: now};
+        users.pop();
+        renderTable(users, 'usersTable');
+    }
+    userLogs.push(logEntry);
+    document.getElementById('triggerResult').innerHTML = `
+        <div class="log-container">
+<span class="log-info">[触发器] AFTER ${op} ON users FOR EACH ROW</span>
+<span class="log-ok">→ INSERT INTO user_logs VALUES(:NEW.user_id='${logEntry.user_id}', '${op}', SYSDATE)</span>
+<span class="log-ok">→ 触发器自动执行完成 ✓</span></div>`;
+    document.getElementById('triggerLog').style.display = 'block';
+    renderTable(userLogs, 'logTable');
+}
+
+// ============ 11. 作业调度 ============
+function showJobDemo() {
+    const jobs = [
+        {作业名: 'DAILY_BACKUP',    类型: 'PL/SQL块', 执行时间: '每天 02:00', 任务描述: '备份整个数据库'},
+        {作业名: 'WEEKLY_REPORT',   类型: 'PL/SQL块', 执行时间: '每周一 00:00', 任务描述: '生成周报并发送邮件'},
+        {作业名: 'daily_cleanup',   类型: 'SQL语句',  执行时间: '每天 02:00', 任务描述: '清理30天前的日志'},
+        {作业名: 'monthly_stats',   类型: 'PL/SQL块', 执行时间: '每月1日 01:00', 任务描述: '统计月度数据'},
+    ];
+    document.getElementById('jobResult').innerHTML = `
+        <div class="result-title">⏰ 常见作业调度任务</div>
+        <table id="jobTable"></table>
+        <div class="explanation" style="margin-top:8px">
+            Oracle 使用 <strong>DBMS_SCHEDULER</strong> 包管理作业；<br>
+            MySQL 使用 <strong>EVENT</strong> 语法；<br>
+            PostgreSQL 使用 <strong>pg_cron</strong> 扩展；<br>
+            常见用途：定期备份、清理过期数据、生成统计报表
+        </div>`;
+    renderTable(jobs, 'jobTable');
+}
+</script>
+</body>
+</html>
