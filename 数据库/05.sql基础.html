@@ -199,6 +199,49 @@ SQL基础学习笔记
         }
         .tag-pk { background: #ffcc02; color: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }
         .tag-nn { background: #ef5350; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; }
+        .toc-nav {
+            margin-top: 24px;
+            border-top: 2px solid #e3f2fd;
+            padding-top: 16px;
+        }
+        .toc-nav-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1565c0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toc-group {
+            margin-bottom: 10px;
+        }
+        .toc-group-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #607d8b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 8px 0 4px 0;
+            padding: 3px 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .toc-link {
+            display: block;
+            padding: 5px 10px 5px 18px;
+            font-size: 13px;
+            color: #1565c0;
+            text-decoration: none;
+            border-radius: 4px;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .toc-link:hover {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
         .section-group-title {
             font-size: 20px;
             font-weight: bold;
@@ -218,10 +261,10 @@ SQL基础学习笔记
     <h1>🗄️ SQL基础语句详解与示例</h1>
 
     <!-- ===== DDL ===== -->
-    <div class="section-group-title">📐 DDL — 数据定义语言（CREATE / ALTER / DROP）</div>
+    <div id="grp-ddl" class="section-group-title">📐 DDL — 数据定义语言（CREATE / ALTER / DROP）</div>
 
     <!-- 1. CREATE TABLE -->
-    <div class="section">
+    <div id="sec-create" class="section">
         <h2>1️⃣ 创建表 — CREATE TABLE</h2>
         <div class="sql-block"><span class="kw">CREATE TABLE</span> <span class="col">Student</span> (
     <span class="col">Sno</span>    <span class="kw">VARCHAR</span>(<span class="num">20</span>) <span class="kw">NOT NULL</span>,
@@ -240,7 +283,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 2. ALTER TABLE -->
-    <div class="section">
+    <div id="sec-alter" class="section">
         <h2>2️⃣ 修改表结构 — ALTER TABLE</h2>
         <div class="sql-block"><span class="cmt">-- 改表名</span>
 <span class="kw">ALTER TABLE</span> <span class="col">Student</span> <span class="kw">RENAME TO</span> <span class="col">StudentInfo</span>;
@@ -262,7 +305,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 3. DROP TABLE -->
-    <div class="section">
+    <div id="sec-drop" class="section">
         <h2>3️⃣ 删除表 — DROP TABLE</h2>
         <div class="sql-block"><span class="kw">DROP TABLE</span> <span class="col">StudentInfo</span>;</div>
         <div class="explanation">
@@ -278,10 +321,10 @@ SQL基础学习笔记
     </div>
 
     <!-- ===== DML ===== -->
-    <div class="section-group-title">🔍 DML — 数据操纵语言（SELECT / INSERT / UPDATE / DELETE）</div>
+    <div id="grp-dml" class="section-group-title">🔍 DML — 数据操纵语言（SELECT / INSERT / UPDATE / DELETE）</div>
 
     <!-- 执行顺序说明 -->
-    <div class="section">
+    <div id="sec-exec" class="section">
         <h2>⚙️ SELECT 执行顺序</h2>
         <div class="exec-order">
             <span class="exec-step">① FROM</span>
@@ -306,7 +349,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 4. SELECT * -->
-    <div class="section">
+    <div id="sec-select" class="section">
         <h2>4️⃣ 基本查询 — SELECT *</h2>
         <div class="sql-block"><span class="cmt">-- 查询所有列</span>
 <span class="kw">SELECT</span> *
@@ -322,7 +365,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 5. 表达式与列别名 -->
-    <div class="section">
+    <div id="sec-alias" class="section">
         <h2>5️⃣ 表达式 & 列别名 — AS</h2>
         <div class="sql-block"><span class="cmt">-- 表达式计算出生年份，AS 起别名</span>
 <span class="kw">SELECT</span> <span class="col">Sname</span>, <span class="num">2026</span> - <span class="col">Age</span> <span class="kw">AS</span> <span class="col">BirthYear</span>
@@ -340,7 +383,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 6. DISTINCT -->
-    <div class="section">
+    <div id="sec-distinct" class="section">
         <h2>6️⃣ 去重 — SELECT DISTINCT</h2>
         <div class="sql-block"><span class="cmt">-- 查询出现过的所有院系（去重）</span>
 <span class="kw">SELECT DISTINCT</span> <span class="col">Sex</span>
@@ -356,10 +399,10 @@ SQL基础学习笔记
     </div>
 
     <!-- ===== WHERE ===== -->
-    <div class="section-group-title">🔎 WHERE 条件详解</div>
+    <div id="grp-where" class="section-group-title">🔎 WHERE 条件详解</div>
 
     <!-- 7. 比较运算符 -->
-    <div class="section">
+    <div id="sec-compare" class="section">
         <h2>7️⃣ 比较运算符</h2>
         <div class="sql-block"><span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">WHERE</span> <span class="col">Age</span> &gt;= <span class="num">20</span>;
 
@@ -373,7 +416,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 8. BETWEEN AND -->
-    <div class="section">
+    <div id="sec-between" class="section">
         <h2>8️⃣ 范围查询 — BETWEEN AND</h2>
         <div class="sql-block"><span class="cmt">-- 年龄在 19 到 21 之间（含边界）</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
@@ -389,7 +432,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 9. IN -->
-    <div class="section">
+    <div id="sec-in" class="section">
         <h2>9️⃣ 集合查询 — IN</h2>
         <div class="sql-block"><span class="cmt">-- 查询 S01 或 S03 的学生</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
@@ -405,7 +448,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 10. LIKE -->
-    <div class="section">
+    <div id="sec-like" class="section">
         <h2>🔟 模糊查询 — LIKE</h2>
         <div class="sql-block"><span class="cmt">-- % 匹配任意长度字符</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span> <span class="kw">WHERE</span> <span class="col">Sname</span> <span class="kw">LIKE</span> <span class="str">'张%'</span>;
@@ -426,7 +469,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 11. IS NULL -->
-    <div class="section">
+    <div id="sec-null" class="section">
         <h2>1️⃣1️⃣ 空值查询 — IS NULL</h2>
         <div class="sql-block"><span class="cmt">-- 查询未登记成绩的选课记录</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
@@ -445,7 +488,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 12. AND / OR -->
-    <div class="section">
+    <div id="sec-logic" class="section">
         <h2>1️⃣2️⃣ 逻辑运算 — AND / OR / NOT</h2>
         <div class="sql-block"><span class="cmt">-- AND：同时满足两个条件</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">Student</span>
@@ -466,10 +509,10 @@ SQL基础学习笔记
     </div>
 
     <!-- ===== 聚集函数 ===== -->
-    <div class="section-group-title">📊 聚集函数 & 分组（GROUP BY / HAVING）</div>
+    <div id="grp-agg" class="section-group-title">📊 聚集函数 & 分组（GROUP BY / HAVING）</div>
 
     <!-- 13. 聚集函数 -->
-    <div class="section">
+    <div id="sec-agg" class="section">
         <h2>1️⃣3️⃣ 聚集函数 — COUNT / SUM / AVG / MAX / MIN</h2>
         <div class="sql-block"><span class="kw">SELECT</span>
     <span class="fn">COUNT</span>(*),            <span class="cmt">-- 统计总行数</span>
@@ -489,7 +532,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 14. GROUP BY -->
-    <div class="section">
+    <div id="sec-groupby" class="section">
         <h2>1️⃣4️⃣ 分组查询 — GROUP BY</h2>
         <div class="sql-block"><span class="cmt">-- 统计每门课程的选课人数和平均分</span>
 <span class="kw">SELECT</span> <span class="col">Cno</span>, <span class="fn">COUNT</span>(<span class="col">Sno</span>) <span class="kw">AS</span> <span class="col">StudentCount</span>, <span class="fn">AVG</span>(<span class="col">Grade</span>) <span class="kw">AS</span> <span class="col">AvgGrade</span>
@@ -504,7 +547,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 15. GROUP BY + HAVING -->
-    <div class="section">
+    <div id="sec-having" class="section">
         <h2>1️⃣5️⃣ 分组筛选 — HAVING</h2>
         <div class="sql-block"><span class="cmt">-- 查询选课人数 &gt; 1 的课程</span>
 <span class="kw">SELECT</span> <span class="col">Cno</span>, <span class="fn">COUNT</span>(<span class="col">Sno</span>) <span class="kw">AS</span> <span class="col">StudentCount</span>
@@ -522,10 +565,10 @@ SQL基础学习笔记
     </div>
 
     <!-- ===== 排序和分页 ===== -->
-    <div class="section-group-title">📋 排序与分页（ORDER BY / LIMIT）</div>
+    <div id="grp-order" class="section-group-title">📋 排序与分页（ORDER BY / LIMIT）</div>
 
     <!-- 16. ORDER BY -->
-    <div class="section">
+    <div id="sec-orderby" class="section">
         <h2>1️⃣6️⃣ 排序 — ORDER BY</h2>
         <div class="sql-block"><span class="cmt">-- 按成绩降序排列（DESC）</span>
 <span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Cno</span>, <span class="col">Grade</span>
@@ -548,7 +591,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 17. LIMIT -->
-    <div class="section">
+    <div id="sec-limit" class="section">
         <h2>1️⃣7️⃣ 分页 — LIMIT</h2>
         <div class="sql-block"><span class="cmt">-- 返回前 3 条记录</span>
 <span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="col">SC</span>
@@ -570,10 +613,10 @@ SQL基础学习笔记
     </div>
 
     <!-- ===== DCL ===== -->
-    <div class="section-group-title">🔐 DCL — 数据控制语言（GRANT / REVOKE）</div>
+    <div id="grp-dcl" class="section-group-title">🔐 DCL — 数据控制语言（GRANT / REVOKE）</div>
 
     <!-- 18. GRANT / REVOKE -->
-    <div class="section">
+    <div id="sec-grant" class="section">
         <h2>1️⃣8️⃣ 权限管理 — GRANT / REVOKE</h2>
         <div class="sql-block"><span class="cmt">-- 授予用户 alice 对 Student 表的查询权限</span>
 <span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="col">Student</span> <span class="kw">TO</span> <span class="col">alice</span>;
@@ -604,7 +647,7 @@ SQL基础学习笔记
     </div>
 
     <!-- 19. INSERT / UPDATE / DELETE -->
-    <div class="section">
+    <div id="sec-dml" class="section">
         <h2>1️⃣9️⃣ 增删改 — INSERT / UPDATE / DELETE</h2>
         <div class="sql-block"><span class="cmt">-- 插入一行</span>
 <span class="kw">INSERT INTO</span> <span class="col">Student</span> (<span class="col">Sno</span>, <span class="col">Sname</span>, <span class="col">Age</span>, <span class="col">Sex</span>)
@@ -651,6 +694,55 @@ SQL基础学习笔记
         <div class="table-name">📋 选课表 (SC)&nbsp;<span style="font-size:11px;color:#888">含NULL成绩</span></div>
         <table id="scTable"></table>
     </div>
+
+    <!-- 目录 -->
+    <nav class="toc-nav">
+        <div class="toc-nav-title">📑 目录</div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">📐 DDL</div>
+            <a class="toc-link" onclick="goTo('sec-create')">1️⃣ 创建表 — CREATE TABLE</a>
+            <a class="toc-link" onclick="goTo('sec-alter')">2️⃣ 修改表结构 — ALTER TABLE</a>
+            <a class="toc-link" onclick="goTo('sec-drop')">3️⃣ 删除表 — DROP TABLE</a>
+        </div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">🔍 DML · SELECT</div>
+            <a class="toc-link" onclick="goTo('sec-exec')">⚙️ SELECT 执行顺序</a>
+            <a class="toc-link" onclick="goTo('sec-select')">4️⃣ 基本查询 — SELECT *</a>
+            <a class="toc-link" onclick="goTo('sec-alias')">5️⃣ 表达式 & 列别名 — AS</a>
+            <a class="toc-link" onclick="goTo('sec-distinct')">6️⃣ 去重 — SELECT DISTINCT</a>
+        </div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">🔎 WHERE 条件</div>
+            <a class="toc-link" onclick="goTo('sec-compare')">7️⃣ 比较运算符</a>
+            <a class="toc-link" onclick="goTo('sec-between')">8️⃣ 范围查询 — BETWEEN AND</a>
+            <a class="toc-link" onclick="goTo('sec-in')">9️⃣ 集合查询 — IN</a>
+            <a class="toc-link" onclick="goTo('sec-like')">🔟 模糊查询 — LIKE</a>
+            <a class="toc-link" onclick="goTo('sec-null')">1️⃣1️⃣ 空值查询 — IS NULL</a>
+            <a class="toc-link" onclick="goTo('sec-logic')">1️⃣2️⃣ 逻辑运算 — AND / OR / NOT</a>
+        </div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">📊 聚集函数 & 分组</div>
+            <a class="toc-link" onclick="goTo('sec-agg')">1️⃣3️⃣ 聚集函数 — COUNT / SUM / AVG…</a>
+            <a class="toc-link" onclick="goTo('sec-groupby')">1️⃣4️⃣ 分组查询 — GROUP BY</a>
+            <a class="toc-link" onclick="goTo('sec-having')">1️⃣5️⃣ 分组筛选 — HAVING</a>
+        </div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">📋 排序 & 分页</div>
+            <a class="toc-link" onclick="goTo('sec-orderby')">1️⃣6️⃣ 排序 — ORDER BY</a>
+            <a class="toc-link" onclick="goTo('sec-limit')">1️⃣7️⃣ 分页 — LIMIT</a>
+        </div>
+
+        <div class="toc-group">
+            <div class="toc-group-label">🔐 DCL</div>
+            <a class="toc-link" onclick="goTo('sec-grant')">1️⃣8️⃣ 权限管理 — GRANT / REVOKE</a>
+            <a class="toc-link" onclick="goTo('sec-dml')">1️⃣9️⃣ 增删改 — INSERT / UPDATE / DELETE</a>
+        </div>
+    </nav>
 </div>
 
 <script>
@@ -714,6 +806,10 @@ function renderSingle(containerId, obj, title) {
 renderTable(students, 'studentTable');
 renderTable(courses,  'courseTable');
 renderTable(sc,       'scTable');
+
+function goTo(id) {
+    document.getElementById(id).scrollIntoView({behavior: 'smooth', block: 'start'});
+}
 
 // ===================== DDL 演示 =====================
 function showCreateSchema() {
