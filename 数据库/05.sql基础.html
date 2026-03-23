@@ -534,15 +534,23 @@ SQL基础学习笔记
     <!-- 14. GROUP BY -->
     <div id="sec-groupby" class="section">
         <h2>1️⃣4️⃣ 分组查询 — GROUP BY</h2>
-        <div class="sql-block"><span class="cmt">-- 统计每门课程的选课人数和平均分</span>
+        <div class="sql-block"><span class="cmt">-- 统计每门课程的选课人数和平均分（单列分组）</span>
 <span class="kw">SELECT</span> <span class="col">Cno</span>, <span class="fn">COUNT</span>(<span class="col">Sno</span>) <span class="kw">AS</span> <span class="col">StudentCount</span>, <span class="fn">AVG</span>(<span class="col">Grade</span>) <span class="kw">AS</span> <span class="col">AvgGrade</span>
 <span class="kw">FROM</span> <span class="col">SC</span>
-<span class="kw">GROUP BY</span> <span class="col">Cno</span>;</div>
+<span class="kw">GROUP BY</span> <span class="col">Cno</span>;
+
+<span class="cmt">-- 多列分组：统计每个学生在每门课中的情况（Sno + Cno 组合分组）</span>
+<span class="kw">SELECT</span> <span class="col">Sno</span>, <span class="col">Cno</span>, <span class="fn">MAX</span>(<span class="col">Grade</span>) <span class="kw">AS</span> <span class="col">MaxGrade</span>
+<span class="kw">FROM</span> <span class="col">SC</span>
+<span class="kw">GROUP BY</span> <span class="col">Sno</span>, <span class="col">Cno</span>;</div>
         <div class="explanation">
             💡 GROUP BY 把相同值的行归为一组，聚集函数对每组分别计算<br>
-            💡 SELECT 中未用聚集函数的列，<strong>必须出现在 GROUP BY 中</strong>
+            💡 SELECT 中未用聚集函数的列，<strong>必须出现在 GROUP BY 中</strong><br>
+            💡 <code>GROUP BY A, B</code>：只有 A 和 B 两列值都相同的行，才算同一组<br>
+            📌 类比：先按 A 分大组，再在每个大组内按 B 分小组
         </div>
-        <button onclick="showGroupBy()">按课程分组统计</button>
+        <button onclick="showGroupBy()">单列分组（按 Cno）</button>
+        <button onclick="showGroupBy2()">多列分组（Sno + Cno）</button>
         <div id="groupByResult"></div>
     </div>
 
@@ -919,6 +927,21 @@ function groupByCno(minCount) {
     })).filter(g => minCount === undefined || g.StudentCount > minCount);
 }
 function showGroupBy()      { renderResult('groupByResult', groupByCno(), 'GROUP BY Cno — 各课程选课人数和平均分'); }
+
+function showGroupBy2() {
+    // GROUP BY Sno, Cno — 每个(学生,课程)组合的最高分（本表中每组恰好一行，清晰展示多列分组）
+    const map = {};
+    sc.forEach(r => {
+        const key = r.Sno + '|' + r.Cno;
+        if (!map[key]) map[key] = {Sno: r.Sno, Cno: r.Cno, MaxGrade: r.Grade};
+        else map[key].MaxGrade = Math.max(map[key].MaxGrade ?? -Infinity, r.Grade ?? -Infinity);
+    });
+    const result = Object.values(map).map(g => ({
+        Sno: g.Sno, Cno: g.Cno, MaxGrade: g.MaxGrade ?? 'NULL'
+    }));
+    renderResult('groupByResult', result, 'GROUP BY Sno, Cno — 每个(学生+课程)组合');
+}
+
 function showHaving(n)      { renderResult('havingResult',  groupByCno(n), `GROUP BY Cno HAVING COUNT(Sno) > ${n}`); }
 
 // ===================== ORDER BY / LIMIT =====================
