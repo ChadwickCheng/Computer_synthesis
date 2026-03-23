@@ -94,6 +94,14 @@
 INSERT → :NEW 是新插入的值（:OLD 为 NULL）
 UPDATE → :NEW 是更新后的值，:OLD 是更新前的值
 DELETE → :OLD 是删除前的值（:NEW 为 NULL）
+
+12. 补充 case when 语句：条件表达式，类似于编程语言中的 if-else
+SELECT tname,
+    CASE [SALARY]
+        WHEN salary > 10000 THEN '高薪'
+        WHEN salary > 7000 THEN '中薪'
+        ELSE '低薪'
+    END AS salary_level
 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
