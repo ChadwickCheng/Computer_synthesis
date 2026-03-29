@@ -102,6 +102,16 @@ SELECT tname,
         WHEN salary > 7000 THEN '中薪'
         ELSE '低薪'
     END AS salary_level
+13. 补充 常用函数
+    1. 时间函数
+        YEAR(date), MONTH(date), DAY(date) 提取年/月/日
+        datediff(date1, date2) 计算两个日期之间的天数
+        NOW() 获取当前日期和时间；DATE_ADD(date, INTERVAL n unit) 日期加上指定时间间隔；DATE_SUB(date, INTERVAL n unit) 日期减去指定时间间隔；三种单位：DAY、MONTH、YEAR
+    2. string
+        SUBSTR(s, start, length) 提取子字符串
+        LENGTH(s) 获取字符串长度; CHAR_LENGTH(s) 获取字符数（考虑多字节字符比如中文）
+        CONCAT(s1, s2, ...) 字符串连接
+        REPLACE(s, from_str, to_str) 替换字符串中的子串
 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
