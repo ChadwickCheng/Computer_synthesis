@@ -18,3 +18,26 @@
 最短路径------------------------
 9. 单源最短路径，各边权值非负：Dijkstra算法；基于优先队列；时间复杂度O((V+E)logV)
 */
+
+/*
+dijkstra伪代码
+// 图用邻接矩阵，n个顶点，s为起点
+dijkstra(Graph, n, s):
+    // 距离数组、访问标记数组
+    dist[] = ∞
+    visited[] = false
+    dist[s] = 0
+
+    // 循环n次，找n个点
+    for i from 0 to n-1:
+        // 找：未访问且距离最小的点u
+        u = 找min(dist)且未访问的点
+        visited[u] = true
+
+        // 松弛：用u更新所有邻接点v
+        for v from 0 to n-1:
+            if not visited[v] 且 dist[v] > dist[u]+Graph[u][v]:
+                dist[v] = dist[u] + Graph[u][v]
+
+    return dist
+*/
