@@ -4,8 +4,10 @@
         串行：一次传输1位，物理线路少，干扰少，长距离，速度快，低成本
             USB：键盘鼠标打印机；2.0：480Mbps；3.0：5Gbps；3.1：40Gbps
             IEEE1394: 外置硬盘；SATA：PC主板与存储；雷电：PCIE+displayport，40Gbps；RS-232:modem，9/25针
+        SATA USB IEEE1394 PCIe RS232/RS485 HDMI M.2 雷电
         并行：淘汰
             IDE：旧式硬盘，光驱，130Mbps；LPT：旧式打印机扫描仪；SCSI：服务器硬盘，磁带机，640Mbps
+        PCI PATA(IDE/EIDE) AGP LPT
     按是否连接多个设备：
         总线：多设备共享，协议管理冲突
             USB：127个设备；PCI-E：网卡ssd显卡；IEEE1394
