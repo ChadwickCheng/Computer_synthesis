@@ -40,4 +40,20 @@ dijkstra(Graph, n, s):
                 dist[v] = dist[u] + Graph[u][v]
 
     return dist
+
+kruskal伪代码
+kruskal(edges, n):
+    把所有边按权值从小到大排序
+    parent[] = 并查集初始化
+    res = 0
+    count = 0
+
+    for 每条边 (u, v, w) in 排序后:
+        if find(u) != find(v):
+            unite(u, v)
+            res = res + w
+            count = count + 1
+            if count == n-1: break
+
+    return res
 */
