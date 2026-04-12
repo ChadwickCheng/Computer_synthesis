@@ -47,7 +47,7 @@
 6. 传输层协议：
     TCP：面向连接，可靠，面向字节流，点对点，全双工可靠信道
     UDP：无连接，不可靠，面向报文，无拥塞控制，n对n，全双工不可靠信道，首部开销小
-    三次握手：
+    三次握手：Cport54321 SPort443
         方向        标志位        序列号      确认号      状态
         C->S        SYN=1        seq=J       ack=0      C:SYN_SENT
         S->C        SYN=1 ACK=1  seq=K       ack=J+1    S:SYN_RCVD
