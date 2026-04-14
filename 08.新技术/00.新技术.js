@@ -119,6 +119,6 @@
         3. 数据清洗技术：预处理，去重，缺失值，异常值，格式单位统一，标准化归一化
         4. 数据分析与挖掘技术：
             分类算法：决策树ID3 C4.5； SVM； KNN； 随机森林； 回归
-            聚类：Kmeans DBSCAN EM
+            聚类：Kmeans DBSCAN EM birch
             关联规则学习：Apriori FP-growth
 */
